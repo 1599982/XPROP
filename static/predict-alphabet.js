@@ -23,6 +23,8 @@ let rightHandStateHistory = [];
 // Variables generales
 let detectionInterval = null;
 let detectedText = "";
+let lastWrittenLetter = null;
+let lastWriteTime = 0;
 
 // Elementos DOM
 let detectedLetterLeftElement;
@@ -31,12 +33,14 @@ let handStateRightElement;
 let handProgressRightElement;
 let detectedTextElement;
 let clearTextButton;
+let writeStatusElement;
 
 // Configuración
 const DETECTION_INTERVAL = 200; // ms entre detecciones
 const CONFIDENCE_THRESHOLD = 80; // Umbral para escribir letra
 const HISTORY_SIZE = 5; // Tamaño del historial para suavizado
 const HAND_CLOSE_THRESHOLD = 0.3; // Umbral para detectar mano cerrada
+const MIN_WRITE_INTERVAL = 800; // ms mínimo entre escrituras de la misma letra
 
 // Clase Random Forest simplificada (copia de main.js)
 class SimpleRandomForest {
@@ -271,6 +275,7 @@ function initDOMElements() {
     handProgressRightElement = document.getElementById('hand-progress-right');
     detectedTextElement = document.getElementById('detected-text');
     clearTextButton = document.getElementById('clear-text');
+    writeStatusElement = document.getElementById('write-status');
     
     // Event listener para limpiar texto
     clearTextButton.addEventListener('click', clearDetectedText);
@@ -743,13 +748,20 @@ function checkAndWriteLetter() {
         const smoothedRightState = getMostCommonRightHandState();
         
         if (smoothedRightState && smoothedLeftConfidence > CONFIDENCE_THRESHOLD && smoothedLeftLetter) {
-            // Evitar escribir la misma letra repetidamente
-            const lastChar = detectedText.slice(-1);
-            if (lastChar !== smoothedLeftLetter) {
+            const currentTime = Date.now();
+            
+            // Permitir escribir si es una letra diferente o ha pasado suficiente tiempo
+            if (smoothedLeftLetter !== lastWrittenLetter || 
+                (currentTime - lastWriteTime) > MIN_WRITE_INTERVAL) {
                 writeDetectedLetter(smoothedLeftLetter);
+                lastWrittenLetter = smoothedLeftLetter;
+                lastWriteTime = currentTime;
             }
         }
     }
+    
+    // Actualizar indicador de estado de escritura
+    updateWriteStatus();
 }
 
 // Escribir letra detectada en el cuadro de texto
@@ -759,15 +771,30 @@ function writeDetectedLetter(letter) {
         detectedTextElement.textContent = detectedText;
     }
     console.log(`Letra escrita: ${letter} (Texto: ${detectedText})`);
+    
+    // Efecto visual de escritura exitosa
+    if (writeStatusElement) {
+        writeStatusElement.textContent = `✅ Escrito: ${letter}`;
+        writeStatusElement.classList.remove('ready', 'cooldown');
+        writeStatusElement.classList.add('ready');
+        
+        // Volver al estado normal después de un momento
+        setTimeout(() => {
+            updateWriteStatus();
+        }, 600);
+    }
 }
 
 // Limpiar texto detectado
 function clearDetectedText() {
     detectedText = "";
+    lastWrittenLetter = null;
+    lastWriteTime = 0;
     if (detectedTextElement) {
         detectedTextElement.textContent = "";
     }
     console.log('Texto limpiado');
+    updateWriteStatus();
 }
 
 // Resetear detección cuando no hay manos
@@ -811,6 +838,57 @@ function resetRightHandDetection() {
     if (handProgressRightElement) {
         handProgressRightElement.style.width = '0%';
         handProgressRightElement.textContent = '0%';
+    }
+}
+
+// Actualizar indicador de estado de escritura
+function updateWriteStatus() {
+    if (!writeStatusElement) return;
+    
+    const currentTime = Date.now();
+    const timeSinceLastWrite = currentTime - lastWriteTime;
+    
+    if (!isLeftHandDetected || !isRightHandDetected) {
+        writeStatusElement.textContent = "⚠️ Faltan manos";
+        writeStatusElement.classList.remove('ready', 'cooldown');
+        return;
+    }
+    
+    const smoothedLeftConfidence = getAverageLeftConfidence();
+    const smoothedRightState = getMostCommonRightHandState();
+    
+    if (smoothedLeftConfidence < CONFIDENCE_THRESHOLD) {
+        writeStatusElement.textContent = `📊 Confianza: ${Math.round(smoothedLeftConfidence)}%`;
+        writeStatusElement.classList.remove('ready', 'cooldown');
+        return;
+    }
+    
+    if (!smoothedRightState) {
+        writeStatusElement.textContent = "👋 Cierra mano derecha";
+        writeStatusElement.classList.remove('ready', 'cooldown');
+        return;
+    }
+    
+    const smoothedLeftLetter = getMostCommonLeftLetter();
+    
+    // Si es la misma letra y está en período de espera
+    if (smoothedLeftLetter === lastWrittenLetter && timeSinceLastWrite < MIN_WRITE_INTERVAL) {
+        const remainingTime = Math.ceil((MIN_WRITE_INTERVAL - timeSinceLastWrite) / 100) / 10;
+        writeStatusElement.textContent = `⏳ Espera ${remainingTime.toFixed(1)}s`;
+        writeStatusElement.classList.remove('ready');
+        writeStatusElement.classList.add('cooldown');
+        return;
+    }
+    
+    // Todo listo para escribir
+    if (smoothedLeftLetter) {
+        writeStatusElement.textContent = `✅ Listo: ${smoothedLeftLetter}`;
+        writeStatusElement.classList.remove('cooldown');
+        writeStatusElement.classList.add('ready');
+    } else {
+        writeStatusElement.textContent = "✅ Listo";
+        writeStatusElement.classList.remove('cooldown');
+        writeStatusElement.classList.add('ready');
     }
 }
 
