@@ -9,6 +9,10 @@ let isLeftHandDetected = false;
 let isRightHandDetected = false;
 let model = null;
 
+// Template elements
+let letterGrid;
+let letterTemplate;
+
 // Variables para detección - mano izquierda (letras)
 let leftHandLetterConfidence = 0;
 let lastDetectedLetterLeft = null;
@@ -41,6 +45,18 @@ const CONFIDENCE_THRESHOLD = 80; // Umbral para escribir letra
 const HISTORY_SIZE = 5; // Tamaño del historial para suavizado
 const HAND_CLOSE_THRESHOLD = 0.3; // Umbral para detectar mano cerrada
 const MIN_WRITE_INTERVAL = 800; // ms mínimo entre escrituras de la misma letra
+
+const ALPHABET = [
+	"A", "B", "C",
+	"D", "E", "F",
+	"G", "H", "I",
+	"J", "K", "L",
+	"M", "N", "O",
+	"P", "Q", "R",
+	"S", "T", "U",
+	"V", "W", "X",
+	"Y", "Z"
+];
 
 // Clase Random Forest simplificada (copia de main.js)
 class SimpleRandomForest {
@@ -277,8 +293,14 @@ function initDOMElements() {
     clearTextButton = document.getElementById('clear-text');
     writeStatusElement = document.getElementById('write-status');
     
+    letterGrid = document.getElementById("alphabet-grid");
+    letterTemplate = document.getElementById("letter-content");
+    
     // Event listener para limpiar texto
     clearTextButton.addEventListener('click', clearDetectedText);
+    
+    // Generar alfabeto automáticamente
+    generateAlphabet();
 }
 
 // Cargar modelo entrenado desde localStorage
@@ -892,6 +914,33 @@ function updateWriteStatus() {
     }
 }
 
+// Generar alfabeto automáticamente usando template
+function generateAlphabet() {
+    if (!letterGrid || !letterTemplate) {
+        console.error('Template elements not found');
+        return;
+    }
+    
+    // Limpiar grid existente (excepto el template)
+    const existingItems = letterGrid.querySelectorAll('.letter-item');
+    existingItems.forEach(item => item.remove());
+    
+    // Generar cada letra del alfabeto
+    ALPHABET.forEach(letter => {
+        const clone = letterTemplate.content.cloneNode(true);
+        
+        clone.querySelector("div").dataset.letter = letter;
+        clone.querySelector("img").src = clone.querySelector("img").src + letter + ".png";
+        clone.querySelector("img").alt = letter;
+        clone.querySelector("span").textContent = letter;
+        
+        letterGrid.appendChild(clone);
+    });
+    
+    console.log(`Alfabeto generado automáticamente: ${ALPHABET.length} letras`);
+    console.log('Letras generadas:', ALPHABET.join(', '));
+}
+
 // Funciones de debugging
 window.debugPrediction = {
     getLeftHandLandmarks: () => leftHandLandmarks,
@@ -908,10 +957,15 @@ window.debugPrediction = {
         confidence: rightHandStateConfidence,
         detected: isRightHandDetected 
     }),
+    getAlphabet: () => ALPHABET,
+    getGeneratedLetters: () => document.querySelectorAll('.letter-item').length,
     clearText: clearDetectedText,
     resetModel: () => {
         model = null;
         loadTrainedModel();
+    },
+    regenerateAlphabet: () => {
+        generateAlphabet();
     }
 };
 
