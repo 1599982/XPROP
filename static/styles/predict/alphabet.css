@@ -90,7 +90,6 @@
 /* Estilos para los detectores */
 .detectores {
   display: flex;
-  flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -335,7 +334,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 /* Cuadro de texto detectado */
@@ -407,7 +406,7 @@
 
 .detected-text-box {
   padding: 15px;
-  min-height: 60px;
+  min-height: 21px;
   background: #f8f9fa;
   border-radius: 0 0 10px 10px;
   display: flex;
@@ -433,7 +432,7 @@
 
 .camera-placeholder {
   width: 450px;
-  height: 500px;
+  height: 458px;
   background-color: #f0f0f0;
   border: 2px solid #ddd;
   border-radius: 12px;
@@ -504,7 +503,7 @@
     width: 380px;
     height: 420px;
   }
-  
+
   .detected-text-container {
     width: 380px;
   }
@@ -547,17 +546,17 @@
     width: 320px;
     height: 350px;
   }
-  
+
   .detected-text-container {
     width: 320px;
   }
-  
+
   .detected-letter, .hand-state {
     width: 35px;
     height: 35px;
     font-size: 20px;
   }
-  
+
   .hand-state {
     width: 60px;
     font-size: 10px;
@@ -624,4 +623,3 @@
 .letter-item span {
   font-size: 15.876px; /* 20% más que 13.23px */
 }
-
