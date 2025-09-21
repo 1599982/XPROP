@@ -42,7 +42,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 15px;
 }
 
 /* Botón Letra */
@@ -85,6 +85,71 @@
   margin-bottom: 15px;
   font-weight: bold;
   text-align: center;
+}
+
+/* Estilos para los detectores */
+.detectores {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.detector {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Detector específico para mano izquierda (letras) */
+.detector:first-child {
+  border-color: #4caf50;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+.detector:first-child .detector-header {
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: white;
+}
+
+/* Detector específico para mano derecha (control) */
+.detector:nth-child(2) {
+  border-color: #2196f3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+.detector:nth-child(2) .detector-header {
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+  color: white;
+}
+
+.detector-header {
+  background: #f5f5f5;
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  color: #333;
+}
+
+.detector-body {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.detector-footer {
+  background: #f8f9fa;
+  padding: 8px 15px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
 }
 
 /* Ajusta el abecedario para que no se desborde */
@@ -166,17 +231,169 @@
   color: white;
 }
 
+/* Estilos para detectores actualizados */
+.detected-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.detected-letter.active {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+  color: #2e7d32;
+  animation: pulse-letter 1.5s infinite;
+}
+
+@keyframes pulse-letter {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.hand-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 40px;
+  background-color: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.hand-state.closed {
+  background-color: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.hand-state.open {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+  color: #1565c0;
+}
+
+.hand-state.closed {
+  animation: pulse-closed 1s infinite;
+}
+
+@keyframes pulse-closed {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Actualizar estilos de la barra de progreso */
+.progress-bar {
+  flex: 1;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-left: 10px;
+}
+
+.progress {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Barra de progreso para detector de letras (verde) */
+.detector:first-child .progress {
+  background: linear-gradient(90deg, #ff5252 0%, #ff9800 30%, #4caf50 80%, #2e7d32 100%);
+}
+
+/* Barra de progreso para detector de control (azul) */
+.detector:nth-child(2) .progress {
+  background: linear-gradient(90deg, #ff5252 0%, #ff9800 30%, #2196f3 80%, #1565c0 100%);
+}
+
 /* Sección derecha - Área de cámara */
 .right-section {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 15px;
+}
+
+/* Cuadro de texto detectado */
+.detected-text-container {
+  width: 450px;
+  background: white;
+  border: 2px solid #5fa8e8;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(95, 168, 232, 0.2);
+}
+
+.detected-text-header {
+  background: #5fa8e8;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.clear-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.detected-text-box {
+  padding: 15px;
+  min-height: 60px;
+  background: #f8f9fa;
+  border-radius: 0 0 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.detected-text-box #detected-text {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  letter-spacing: 2px;
+  word-break: break-all;
 }
 
 .camera-area {
   width: 100%;
-  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -220,10 +437,18 @@
 }
 
 #video {
+  display: none;
   width: 100%;
   height: 100%;
   border-radius: 10px;
   object-fit: cover;
+}
+
+#canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background-color: #000;
 }
 
 /* Responsive para pantallas más pequeñas */
@@ -246,6 +471,19 @@
   .camera-placeholder {
     width: 380px;
     height: 420px;
+  }
+  
+  .detected-text-container {
+    width: 380px;
+  }
+
+  .detectores {
+    gap: 8px;
+  }
+
+  .detector-body {
+    padding: 12px;
+    gap: 10px;
   }
 }
 
@@ -276,6 +514,40 @@
   .camera-placeholder {
     width: 320px;
     height: 350px;
+  }
+  
+  .detected-text-container {
+    width: 320px;
+  }
+  
+  .detected-letter, .hand-state {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+  }
+  
+  .hand-state {
+    width: 60px;
+    font-size: 10px;
+  }
+
+  .detectores {
+    gap: 6px;
+  }
+
+  .detector-body {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .detector-header {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .detector-footer {
+    padding: 6px 12px;
+    font-size: 11px;
   }
 }
 

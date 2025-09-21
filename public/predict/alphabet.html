@@ -47,34 +47,34 @@
     <div class="left-section">
       <!-- Detectores -->
       <div class="detectores">
-        <!-- Detector 1 -->
+        <!-- Detector 1: Mano Izquierda - Letras -->
         <div class="detector">
           <div class="detector-header">
-            <span>Detector ABC</span>
+            <span>Mano Izquierda - Letras</span>
             <span class="icon">⋮</span>
           </div>
           <div class="detector-body">
-            <div class="icon-box">+</div>
+            <div class="detected-letter" id="detected-letter-left">-</div>
             <div class="progress-bar">
-              <div class="progress" style="width: 75%;">barra de progreso</div>
+              <div class="progress" id="letter-progress-left" style="width: 0%;">0%</div>
             </div>
           </div>
-          <div class="detector-footer">Mano Izquierda</div>
+          <div class="detector-footer">Reconocimiento ABC</div>
         </div>
 
-        <!-- Detector 2 -->
+        <!-- Detector 2: Mano Derecha - Control -->
         <div class="detector">
           <div class="detector-header">
-            <span>Detector ABC</span>
+            <span>Mano Derecha - Control</span>
             <span class="icon">⋮</span>
           </div>
           <div class="detector-body">
-            <div class="icon-box">+</div>
+            <div class="hand-state" id="hand-state-right">ABIERTA</div>
             <div class="progress-bar">
-              <div class="progress" style="width: 63%;">barra de progreso</div>
+              <div class="progress" id="hand-progress-right" style="width: 0%;">0%</div>
             </div>
           </div>
-          <div class="detector-footer">Mano Izquierda</div>
+          <div class="detector-footer">Control de Escritura</div>
         </div>
               <!-- Abecedario -->
           <div class="abecedario-container">
@@ -197,20 +197,32 @@
 
          <!-- Sección derecha: Cámara -->
     <div class="right-section">
+      <!-- Cuadro de letras detectadas -->
+      <div class="detected-text-container">
+        <div class="detected-text-header">
+          <span>Texto Detectado</span>
+          <button id="clear-text" class="clear-btn">Limpiar</button>
+        </div>
+        <div class="detected-text-box" id="detected-text-box">
+          <span id="detected-text"></span>
+        </div>
+      </div>
+      
       <div class="camera-area">
         <div class="camera-placeholder">
-          <p>Área de captura de cámara</p>
-          <button id="start-camera" class="camera-btn">
-            Iniciar Cámara
-          </button>
-          <video id="video" autoplay muted style="display: none"></video>
-          <canvas id="canvas" style="display: none"></canvas>
+          <video id="video" autoplay muted></video>
+          <canvas id="canvas" width="450" height="400"></canvas>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-    <script src="letras-script.js"></script>
+    <!-- Librerías necesarias para MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='predict-alphabet.js') }}" type="module"></script>
   </body>
 </html>
