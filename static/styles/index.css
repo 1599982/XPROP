@@ -182,7 +182,6 @@ body {
   display: flex;
   gap: 15px; /* Espacio entre los detectores */
   margin-bottom: 20px;
-  flex-wrap: wrap; /* Permite que se envuelvan en pantallas pequeñas */
 }
 
 /* Estilos para cada detector individual */
@@ -195,7 +194,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  max-width: 150px;
   min-width: 150px; /* Mantiene un ancho mínimo */
   max-height: 120px; /* Ajustado para el contenido */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

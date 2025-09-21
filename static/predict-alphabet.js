@@ -284,7 +284,7 @@ function initDOMElements() {
     video = document.getElementById('video');
     canvas = document.getElementById('canvas');
     context = canvas.getContext('2d');
-    
+
     detectedLetterLeftElement = document.getElementById('detected-letter-left');
     letterProgressLeftElement = document.getElementById('letter-progress-left');
     handStateRightElement = document.getElementById('hand-state-right');
@@ -292,13 +292,13 @@ function initDOMElements() {
     detectedTextElement = document.getElementById('detected-text');
     clearTextButton = document.getElementById('clear-text');
     writeStatusElement = document.getElementById('write-status');
-    
+
     letterGrid = document.getElementById("alphabet-grid");
     letterTemplate = document.getElementById("letter-content");
-    
+
     // Event listener para limpiar texto
     clearTextButton.addEventListener('click', clearDetectedText);
-    
+
     // Generar alfabeto automáticamente
     generateAlphabet();
 }
@@ -392,7 +392,7 @@ function onHandsResults(results) {
         for (let i = 0; i < results.multiHandLandmarks.length; i++) {
             const landmarks = results.multiHandLandmarks[i];
             const handedness = results.multiHandedness[i];
-            
+
             // MediaPipe devuelve la perspectiva de la cámara (espejo)
             // Así que "Left" es la mano derecha del usuario y viceversa
             if (handedness.label === 'Right') {
@@ -430,7 +430,7 @@ function drawResults(results) {
             lineWidth: 1,
             radius: 3
         });
-        
+
         // Etiqueta para mano izquierda
         drawHandLabel(leftHandLandmarks[0], "IZQUIERDA - LETRAS", "#00ff00");
     }
@@ -446,7 +446,7 @@ function drawResults(results) {
             lineWidth: 1,
             radius: 3
         });
-        
+
         // Etiqueta para mano derecha
         drawHandLabel(rightHandLandmarks[0], "DERECHA - CONTROL", "#0088ff");
     }
@@ -462,37 +462,37 @@ function drawResults(results) {
 // Dibujar etiqueta de mano
 function drawHandLabel(wristLandmark, label, color) {
     context.save();
-    
+
     const x = wristLandmark.x * canvas.width;
     const y = wristLandmark.y * canvas.height - 35;
-    
+
     // Fondo semi-transparente para la etiqueta
     context.fillStyle = 'rgba(0, 0, 0, 0.7)';
     context.fillRect(x - 60, y - 15, 120, 20);
-    
+
     // Texto de la etiqueta
     context.fillStyle = color;
     context.font = 'bold 11px Arial';
     context.textAlign = 'center';
     context.fillText(label, x, y - 2);
-    
+
     context.restore();
 }
 
 // Dibujar mensaje cuando no hay mano detectada
 function drawNoHandMessage() {
     context.save();
-    
+
     // Fondo semi-transparente
     context.fillStyle = 'rgba(0, 0, 0, 0.3)';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     // Texto
     context.fillStyle = '#ffffff';
     context.font = 'bold 16px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    
+
     context.fillText('Sistema de Detección de Dos Manos', canvas.width / 2, canvas.height / 2 - 50);
     context.font = 'bold 14px Arial';
     context.fillStyle = '#00ff00';
@@ -503,7 +503,7 @@ function drawNoHandMessage() {
     context.font = 'bold 12px Arial';
     context.fillText('• Confianza de letra > 80% para escribir', canvas.width / 2, canvas.height / 2 + 20);
     context.fillText('• Asegúrate de buena iluminación', canvas.width / 2, canvas.height / 2 + 35);
-    
+
     context.restore();
 }
 
@@ -531,20 +531,20 @@ function performDetection() {
         } else {
             resetLeftHandDetection();
         }
-        
+
         // Procesar mano derecha (control)
         if (isRightHandDetected && rightHandLandmarks) {
             detectRightHandState();
         } else {
             resetRightHandDetection();
         }
-        
+
         // Actualizar UI
         updateDetectorUI();
-        
+
         // Escribir letra si se cumplen condiciones
         checkAndWriteLetter();
-        
+
     } catch (error) {
         console.error('Error en detección:', error);
     }
@@ -558,15 +558,15 @@ function detectLetterFromLeftHand() {
     // Predecir letra
     const predictions = model.predict([features]);
     const letterPrediction = predictions[0];
-    
+
     // Calcular confianza de la letra (0-100)
     leftHandLetterConfidence = Math.round(letterPrediction.confidence * 100);
     lastDetectedLetterLeft = letterPrediction.prediction;
-    
+
     // Actualizar historial para suavizado
     leftHandLetterHistory.push(lastDetectedLetterLeft);
     leftHandConfidenceHistory.push(leftHandLetterConfidence);
-    
+
     // Mantener tamaño máximo del historial
     if (leftHandLetterHistory.length > HISTORY_SIZE) {
         leftHandLetterHistory.shift();
@@ -579,10 +579,10 @@ function detectRightHandState() {
     const handState = detectHandState(rightHandLandmarks);
     isRightHandClosed = handState.isClosed;
     rightHandStateConfidence = Math.round(handState.confidence * 100);
-    
+
     // Actualizar historial para suavizado
     rightHandStateHistory.push(isRightHandClosed);
-    
+
     // Mantener tamaño máximo del historial
     if (rightHandStateHistory.length > HISTORY_SIZE) {
         rightHandStateHistory.shift();
@@ -702,12 +702,12 @@ function calculateFingerAngle(mcp, pip, tip) {
 // Obtener letra más común del historial de mano izquierda
 function getMostCommonLeftLetter() {
     if (leftHandLetterHistory.length === 0) return null;
-    
+
     const counts = {};
     leftHandLetterHistory.forEach(letter => {
         counts[letter] = (counts[letter] || 0) + 1;
     });
-    
+
     return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
 }
 
@@ -720,7 +720,7 @@ function getAverageLeftConfidence() {
 // Obtener estado más común de mano derecha
 function getMostCommonRightHandState() {
     if (rightHandStateHistory.length === 0) return false;
-    
+
     const closedCount = rightHandStateHistory.filter(state => state).length;
     return closedCount > rightHandStateHistory.length / 2;
 }
@@ -731,29 +731,29 @@ function updateDetectorUI() {
     if (isLeftHandDetected) {
         const smoothedLetter = getMostCommonLeftLetter();
         const smoothedConfidence = getAverageLeftConfidence();
-        
+
         if (detectedLetterLeftElement && smoothedLetter) {
             detectedLetterLeftElement.textContent = smoothedLetter;
             detectedLetterLeftElement.classList.toggle('active', smoothedConfidence > 60);
         }
-        
+
         if (letterProgressLeftElement) {
             letterProgressLeftElement.style.width = `${smoothedConfidence}%`;
             letterProgressLeftElement.textContent = `${Math.round(smoothedConfidence)}%`;
         }
     }
-    
+
     // Detector 2: Mano Derecha (Control)
     if (isRightHandDetected) {
         const smoothedRightState = getMostCommonRightHandState();
-        
+
         if (handStateRightElement) {
             const currentState = smoothedRightState ? 'CERRADA' : 'ABIERTA';
             handStateRightElement.textContent = currentState;
             handStateRightElement.classList.remove('open', 'closed');
             handStateRightElement.classList.add(smoothedRightState ? 'closed' : 'open');
         }
-        
+
         if (handProgressRightElement) {
             handProgressRightElement.style.width = `${rightHandStateConfidence}%`;
             handProgressRightElement.textContent = `${rightHandStateConfidence}%`;
@@ -768,12 +768,12 @@ function checkAndWriteLetter() {
         const smoothedLeftConfidence = getAverageLeftConfidence();
         const smoothedLeftLetter = getMostCommonLeftLetter();
         const smoothedRightState = getMostCommonRightHandState();
-        
+
         if (smoothedRightState && smoothedLeftConfidence > CONFIDENCE_THRESHOLD && smoothedLeftLetter) {
             const currentTime = Date.now();
-            
+
             // Permitir escribir si es una letra diferente o ha pasado suficiente tiempo
-            if (smoothedLeftLetter !== lastWrittenLetter || 
+            if (smoothedLeftLetter !== lastWrittenLetter ||
                 (currentTime - lastWriteTime) > MIN_WRITE_INTERVAL) {
                 writeDetectedLetter(smoothedLeftLetter);
                 lastWrittenLetter = smoothedLeftLetter;
@@ -781,7 +781,7 @@ function checkAndWriteLetter() {
             }
         }
     }
-    
+
     // Actualizar indicador de estado de escritura
     updateWriteStatus();
 }
@@ -793,13 +793,13 @@ function writeDetectedLetter(letter) {
         detectedTextElement.textContent = detectedText;
     }
     console.log(`Letra escrita: ${letter} (Texto: ${detectedText})`);
-    
+
     // Efecto visual de escritura exitosa
     if (writeStatusElement) {
         writeStatusElement.textContent = `✅ Escrito: ${letter}`;
         writeStatusElement.classList.remove('ready', 'cooldown');
         writeStatusElement.classList.add('ready');
-        
+
         // Volver al estado normal después de un momento
         setTimeout(() => {
             updateWriteStatus();
@@ -831,12 +831,12 @@ function resetLeftHandDetection() {
     lastDetectedLetterLeft = null;
     leftHandLetterHistory = [];
     leftHandConfidenceHistory = [];
-    
+
     if (detectedLetterLeftElement) {
-        detectedLetterLeftElement.textContent = isLeftHandDetected ? '-' : 'SIN MANO';
+        detectedLetterLeftElement.textContent = isLeftHandDetected ? '-' : '-';
         detectedLetterLeftElement.classList.remove('active');
     }
-    
+
     if (letterProgressLeftElement) {
         letterProgressLeftElement.style.width = '0%';
         letterProgressLeftElement.textContent = '0%';
@@ -848,15 +848,15 @@ function resetRightHandDetection() {
     rightHandStateConfidence = 0;
     isRightHandClosed = false;
     rightHandStateHistory = [];
-    
+
     if (handStateRightElement) {
-        handStateRightElement.textContent = isRightHandDetected ? 'ABIERTA' : 'SIN MANO';
+        handStateRightElement.textContent = isRightHandDetected ? 'ABIERTA' : '-';
         handStateRightElement.classList.remove('open', 'closed');
         if (isRightHandDetected) {
             handStateRightElement.classList.add('open');
         }
     }
-    
+
     if (handProgressRightElement) {
         handProgressRightElement.style.width = '0%';
         handProgressRightElement.textContent = '0%';
@@ -866,33 +866,33 @@ function resetRightHandDetection() {
 // Actualizar indicador de estado de escritura
 function updateWriteStatus() {
     if (!writeStatusElement) return;
-    
+
     const currentTime = Date.now();
     const timeSinceLastWrite = currentTime - lastWriteTime;
-    
+
     if (!isLeftHandDetected || !isRightHandDetected) {
         writeStatusElement.textContent = "⚠️ Faltan manos";
         writeStatusElement.classList.remove('ready', 'cooldown');
         return;
     }
-    
+
     const smoothedLeftConfidence = getAverageLeftConfidence();
     const smoothedRightState = getMostCommonRightHandState();
-    
+
     if (smoothedLeftConfidence < CONFIDENCE_THRESHOLD) {
         writeStatusElement.textContent = `📊 Confianza: ${Math.round(smoothedLeftConfidence)}%`;
         writeStatusElement.classList.remove('ready', 'cooldown');
         return;
     }
-    
+
     if (!smoothedRightState) {
         writeStatusElement.textContent = "👋 Cierra mano derecha";
         writeStatusElement.classList.remove('ready', 'cooldown');
         return;
     }
-    
+
     const smoothedLeftLetter = getMostCommonLeftLetter();
-    
+
     // Si es la misma letra y está en período de espera
     if (smoothedLeftLetter === lastWrittenLetter && timeSinceLastWrite < MIN_WRITE_INTERVAL) {
         const remainingTime = Math.ceil((MIN_WRITE_INTERVAL - timeSinceLastWrite) / 100) / 10;
@@ -901,7 +901,7 @@ function updateWriteStatus() {
         writeStatusElement.classList.add('cooldown');
         return;
     }
-    
+
     // Todo listo para escribir
     if (smoothedLeftLetter) {
         writeStatusElement.textContent = `✅ Listo: ${smoothedLeftLetter}`;
@@ -920,23 +920,23 @@ function generateAlphabet() {
         console.error('Template elements not found');
         return;
     }
-    
+
     // Limpiar grid existente (excepto el template)
     const existingItems = letterGrid.querySelectorAll('.letter-item');
     existingItems.forEach(item => item.remove());
-    
+
     // Generar cada letra del alfabeto
     ALPHABET.forEach(letter => {
         const clone = letterTemplate.content.cloneNode(true);
-        
+
         clone.querySelector("div").dataset.letter = letter;
         clone.querySelector("img").src = clone.querySelector("img").src + letter + ".png";
         clone.querySelector("img").alt = letter;
         clone.querySelector("span").textContent = letter;
-        
+
         letterGrid.appendChild(clone);
     });
-    
+
     console.log(`Alfabeto generado automáticamente: ${ALPHABET.length} letras`);
     console.log('Letras generadas:', ALPHABET.join(', '));
 }
@@ -947,15 +947,15 @@ window.debugPrediction = {
     getRightHandLandmarks: () => rightHandLandmarks,
     getModel: () => model,
     getDetectedText: () => detectedText,
-    getLeftHandStats: () => ({ 
-        letter: lastDetectedLetterLeft, 
+    getLeftHandStats: () => ({
+        letter: lastDetectedLetterLeft,
         confidence: leftHandLetterConfidence,
-        detected: isLeftHandDetected 
+        detected: isLeftHandDetected
     }),
-    getRightHandStats: () => ({ 
-        closed: isRightHandClosed, 
+    getRightHandStats: () => ({
+        closed: isRightHandClosed,
         confidence: rightHandStateConfidence,
-        detected: isRightHandDetected 
+        detected: isRightHandDetected
     }),
     getAlphabet: () => ALPHABET,
     getGeneratedLetters: () => document.querySelectorAll('.letter-item').length,

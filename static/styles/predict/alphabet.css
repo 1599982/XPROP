@@ -42,7 +42,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  justify-content: center;
 }
 
 /* Botón Letra */
@@ -90,7 +90,6 @@
 /* Estilos para los detectores */
 .detectores {
   display: flex;
-  gap: 10px;
   margin-bottom: 20px;
 }
 
@@ -100,6 +99,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
 }
 
 /* Detector específico para mano izquierda (letras) */
@@ -235,7 +235,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 70px;
   height: 40px;
   background-color: #f0f0f0;
   border: 2px solid #ddd;
@@ -298,11 +298,10 @@
 /* Actualizar estilos de la barra de progreso */
 .progress-bar {
   flex: 1;
-  height: 20px;
+  height: 10px;
   background-color: #e0e0e0;
   border-radius: 10px;
   overflow: hidden;
-  margin-left: 10px;
 }
 
 .progress {
@@ -319,12 +318,12 @@
 
 /* Barra de progreso para detector de letras (verde) */
 .detector:first-child .progress {
-  background: linear-gradient(90deg, #ff5252 0%, #ff9800 30%, #4caf50 80%, #2e7d32 100%);
+  background: #4caf50;
 }
 
 /* Barra de progreso para detector de control (azul) */
 .detector:nth-child(2) .progress {
-  background: linear-gradient(90deg, #ff5252 0%, #ff9800 30%, #2196f3 80%, #1565c0 100%);
+  background: #2196f3;
 }
 
 /* Sección derecha - Área de cámara */
@@ -586,7 +585,6 @@
 
 /* Contenedor del abecedario un 20% más grande */
 .abecedario-container {
-  margin-top: 15.12px; /* 20% más que 12.6px */
   padding: 39.69px; /* 20% más que 33.075px */
   border: 1.89px solid #ddd;
   border-radius: 10.08px;
