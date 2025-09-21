@@ -1,4 +1,4 @@
-/* ====== Fondo general ====== */
+ /* ====== Fondo general ====== */
 body {
   margin: -50px;
   background: #DBE8F4;
@@ -170,4 +170,98 @@ body {
 
 .text p {
   margin-bottom: 15px;
+}
+
+/* css de la pagina de letras */
+
+
+/* css de dETECTORES*/
+
+/* Contenedor principal de los detectores */
+.detectores {
+  display: flex;
+  gap: 15px; /* Espacio entre los detectores */
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* Permite que se envuelvan en pantallas pequeñas */
+}
+
+/* Estilos para cada detector individual */
+.detector {
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 150px;
+  min-width: 150px; /* Mantiene un ancho mínimo */
+  max-height: 120px; /* Ajustado para el contenido */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.detector:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Header del detector */
+.detector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  color: #333;
+}
+
+.detector-header .icon {
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Cuerpo del detector */
+.detector-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.icon-box {
+  width: 24px;
+  height: 24px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #666;
+}
+
+
+
+/* Footer del detector */
+.detector-footer {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Responsive: En pantallas pequeñas, los detectores se apilan */
+@media (max-width: 768px) {
+  .detectores {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .detector {
+    max-width: 100%;
+    min-width: 200px;
+  }
 }

@@ -10,6 +10,14 @@ def casa():
 def allenamiento():
 	return render_template("training.html")
 
+@app.route('/previsione/alfabeto')
+def prv_alfabeto():
+		return render_template("predict/alphabet.html")
+
+@app.route('/previsione/numeri')
+def prv_numeri():
+		return render_template("predict/numbers.html")
+
 @app.route('/allenamiento/alfabeto')
 def all_alfabeto():
 		return render_template("training/alphabet.html")

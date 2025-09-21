@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrenamiento - Letras</title>
+
+    <!-- Fuente Konkhmer Sleokchher -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/alphabet.css') }}">
+
+  </head>
+  <body>
+    <!-- Título -->
+    <h2 class="title">Entrenamiento</h2>
+
+<!-- Único cuadro azul -->
+<div class="content-box">
+  <!-- Sidebar -->
+	<div class="sidebar">
+		<button onclick="window.location.href='/'">
+			<img src="{{ url_for('static', filename='images/icons/home.png') }}" alt="Inicio">
+		</button>
+		<button onclick="window.location.href='/previsione/alfabeto'">
+			<img src="{{ url_for('static', filename='images/icons/letters.png') }}" alt="Letras">
+		</button>
+		<button onclick="window.location.href='/previsione/numeri'">
+			<img src="{{ url_for('static', filename='images/icons/numbers.png') }}" alt="Número">
+		</button>
+		<button onclick="window.location.href='/allenamiento'">
+			<img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenando">
+		</button>
+		<button onclick="window.location.href='/'">
+			<img src="{{ url_for('static', filename='images/icons/user.png') }}" alt="Usuario">
+		</button>
+	</div>
+
+
+            <!-- Contenido principal -->
+  <div class="main-content">
+    <!-- Sección izquierda -->
+    <div class="left-section">
+      <!-- Detectores -->
+      <div class="detectores">
+        <!-- Detector 1 -->
+        <div class="detector">
+          <div class="detector-header">
+            <span>Detector ABC</span>
+            <span class="icon">⋮</span>
+          </div>
+          <div class="detector-body">
+            <div class="icon-box">+</div>
+            <div class="progress-bar">
+              <div class="progress" style="width: 75%;">barra de progreso</div>
+            </div>
+          </div>
+          <div class="detector-footer">Mano Izquierda</div>
+        </div>
+
+        <!-- Detector 2 -->
+        <div class="detector">
+          <div class="detector-header">
+            <span>Detector ABC</span>
+            <span class="icon">⋮</span>
+          </div>
+          <div class="detector-body">
+            <div class="icon-box">+</div>
+            <div class="progress-bar">
+              <div class="progress" style="width: 63%;">barra de progreso</div>
+            </div>
+          </div>
+          <div class="detector-footer">Mano Izquierda</div>
+        </div>
+              <!-- Abecedario -->
+          <div class="abecedario-container">
+            <h3 class="abecedario-titulo">Abecedario en Señas</h3>
+            <div class="alphabet-grid">
+              <div class="letter-item" data-letter="A">
+                <img src="imagenes/iconos/letras/A.png" alt="Letra A" />
+                <span>A</span>
+              </div>
+              <div class="letter-item" data-letter="B">
+                <img src="imagenes/iconos/letras/B.png" alt="Letra B" />
+                <span>B</span>
+              </div>
+              <div class="letter-item" data-letter="C">
+                <img src="imagenes/iconos/letras/C.png" alt="Letra C" />
+                <span>C</span>
+              </div>
+              <div class="letter-item" data-letter="D">
+                <img src="imagenes/iconos/letras/D.png" alt="Letra D" />
+                <span>D</span>
+              </div>
+              <div class="letter-item" data-letter="E">
+                <img src="imagenes/iconos/letras/E.png" alt="Letra E" />
+                <span>E</span>
+              </div>
+              <div class="letter-item" data-letter="F">
+                <img src="imagenes/iconos/letras/F.png" alt="Letra F" />
+                <span>F</span>
+              </div>
+              <div class="letter-item" data-letter="G">
+                <img src="imagenes/iconos/letras/G.png" alt="Letra G" />
+                <span>G</span>
+              </div>
+
+              <!-- Fila 2: H-N -->
+              <div class="letter-item" data-letter="H">
+                <img src="imagenes/iconos/letras/H.png" alt="Letra H" />
+                <span>H</span>
+              </div>
+              <div class="letter-item" data-letter="I">
+                <img src="imagenes/iconos/letras/I.png" alt="Letra I" />
+                <span>I</span>
+              </div>
+              <div class="letter-item" data-letter="J">
+                <img src="imagenes/iconos/letras/J.png" alt="Letra J" />
+                <span>J</span>
+              </div>
+              <div class="letter-item" data-letter="K">
+                <img src="imagenes/iconos/letras/K.png" alt="Letra K" />
+                <span>K</span>
+              </div>
+              <div class="letter-item" data-letter="L">
+                <img src="imagenes/iconos/letras/L.png" alt="Letra L" />
+                <span>L</span>
+              </div>
+              <div class="letter-item" data-letter="M">
+                <img src="imagenes/iconos/letras/M.png" alt="Letra M" />
+                <span>M</span>
+              </div>
+              <div class="letter-item" data-letter="N">
+                <img src="imagenes/iconos/letras/N.png" alt="Letra N" />
+                <span>N</span>
+              </div>
+
+              <!-- Fila 3: O-U -->
+              <div class="letter-item" data-letter="O">
+                <img src="imagenes/iconos/letras/O.png" alt="Letra O" />
+                <span>O</span>
+              </div>
+              <div class="letter-item" data-letter="P">
+                <img src="imagenes/iconos/letras/P.png" alt="Letra P" />
+                <span>P</span>
+              </div>
+              <div class="letter-item" data-letter="Q">
+                <img src="imagenes/iconos/letras/Q.png" alt="Letra Q" />
+                <span>Q</span>
+              </div>
+              <div class="letter-item" data-letter="R">
+                <img src="imagenes/iconos/letras/R.png" alt="Letra R" />
+                <span>R</span>
+              </div>
+              <div class="letter-item" data-letter="S">
+                <img src="imagenes/iconos/letras/S.png" alt="Letra S" />
+                <span>S</span>
+              </div>
+              <div class="letter-item" data-letter="T">
+                <img src="imagenes/iconos/letras/T.png" alt="Letra T" />
+                <span>T</span>
+              </div>
+              <div class="letter-item" data-letter="U">
+                <img src="imagenes/iconos/letras/U.png" alt="Letra U" />
+                <span>U</span>
+              </div>
+
+              <!-- Fila 4: V-Z -->
+              <div class="letter-item" data-letter="V">
+                <img src="imagenes/iconos/letras/V.png" alt="Letra V" />
+                <span>V</span>
+              </div>
+              <div class="letter-item" data-letter="W">
+                <img src="imagenes/iconos/letras/W.png" alt="Letra W" />
+                <span>W</span>
+              </div>
+              <div class="letter-item" data-letter="X">
+                <img src="imagenes/iconos/letras/X.png" alt="Letra X" />
+                <span>X</span>
+              </div>
+              <div class="letter-item" data-letter="Y">
+                <img src="imagenes/iconos/letras/Y.png" alt="Letra Y" />
+                <span>Y</span>
+              </div>
+              <div class="letter-item" data-letter="Z">
+                <img src="imagenes/iconos/letras/Z.png" alt="Letra Z" />
+                <span>Z</span>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+         <!-- Sección derecha: Cámara -->
+    <div class="right-section">
+      <div class="camera-area">
+        <div class="camera-placeholder">
+          <p>Área de captura de cámara</p>
+          <button id="start-camera" class="camera-btn">
+            Iniciar Cámara
+          </button>
+          <video id="video" autoplay muted style="display: none"></video>
+          <canvas id="canvas" style="display: none"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script src="letras-script.js"></script>
+  </body>
+</html>

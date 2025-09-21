@@ -258,7 +258,7 @@ function actionLetter() {
 
 	this.classList.add('selected');
 	selectedLetter = this.dataset.letter;
-	
+
 	console.log(`Iniciando entrenamiento para la letra: ${selectedLetter}`);
 	startCountdown();
 }
@@ -268,13 +268,13 @@ function startCountdown() {
 	countdownActive = true;
 	window.countdownActive = true;
 	let countdown = 3;
-	
+
 	// Dibujar el primer número inmediatamente
 	drawCountdown(countdown);
-	
+
 	const countdownInterval = setInterval(() => {
 		countdown--;
-		
+
 		if (countdown < 0) {
 			clearInterval(countdownInterval);
 			countdownActive = false;
@@ -292,17 +292,17 @@ function startCountdown() {
 function drawCountdown(number) {
 	// Limpiar completamente el canvas primero
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	
+
 	// Guardar el estado del canvas
 	context.save();
-	
+
 	// Fondo semi-transparente
-	context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+	context.fillStyle = 'rgba(0, 0, 0, 0.5)';
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	
+
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
-	
+
 	// Configurar estilo del número
 	context.fillStyle = '#FFD700';
 	context.strokeStyle = '#FF4500';
@@ -310,27 +310,22 @@ function drawCountdown(number) {
 	context.font = 'bold 120px Arial';
 	context.textAlign = 'center';
 	context.textBaseline = 'middle';
-	
+
 	// Dibujar número con sombra
 	context.shadowColor = '#000000';
 	context.shadowBlur = 10;
 	context.shadowOffsetX = 2;
 	context.shadowOffsetY = 2;
-	
+
 	context.fillText(number.toString(), centerX, centerY);
 	context.strokeText(number.toString(), centerX, centerY);
-	
+
 	// Resetear sombra para el texto adicional
 	context.shadowColor = 'transparent';
 	context.shadowBlur = 0;
 	context.shadowOffsetX = 0;
 	context.shadowOffsetY = 0;
-	
-	// Texto adicional
-	context.fillStyle = '#FFFFFF';
-	context.font = 'bold 24px Arial';
-	context.fillText(`Prepárate para mostrar la letra ${selectedLetter}`, centerX, centerY + 80);
-	
+
 	context.restore();
 }
 
@@ -342,25 +337,25 @@ function startDataCapture() {
 	let captureInterval = 100; // Capturar cada 100ms
 	let samplesCollected = 0;
 	let maxSamples = captureTime / captureInterval;
-	
+
 	console.log(`Iniciando captura de datos para ${selectedLetter}...`);
-	
+
 	const captureIntervalId = setInterval(() => {
 		if (currentHandLandmarks && selectedLetter) {
 			const features = Utils.extractHandFeatures(currentHandLandmarks);
-			
+
 			if (features) {
 				trainingData.push(features);
 				trainingLabels.push(selectedLetter);
 				samplesCollected++;
 			}
 		}
-		
+
 		// Mostrar progreso en el canvas
 		drawCaptureProgress(samplesCollected, maxSamples);
-		
+
 	}, captureInterval);
-	
+
 	// Finalizar captura después de 5 segundos
 	setTimeout(() => {
 		clearInterval(captureIntervalId);
@@ -374,28 +369,28 @@ function startDataCapture() {
 function drawCaptureProgress(current, total) {
 	// Limpiar completamente el canvas primero
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	
+
 	context.save();
-	
+
 	// Fondo semi-transparente
 	context.fillStyle = 'rgba(0, 0, 0, 0.7)';
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	
+
 	// Barra de progreso
 	const barWidth = 300;
 	const barHeight = 20;
 	const barX = (canvas.width - barWidth) / 2;
 	const barY = canvas.height / 2;
-	
+
 	// Fondo de la barra
 	context.fillStyle = '#333333';
 	context.fillRect(barX, barY, barWidth, barHeight);
-	
+
 	// Progreso
 	const progress = current / total;
 	context.fillStyle = '#00FF00';
 	context.fillRect(barX, barY, barWidth * progress, barHeight);
-	
+
 	// Texto
 	context.fillStyle = '#FFFFFF';
 	context.font = 'bold 24px Arial';
@@ -403,58 +398,58 @@ function drawCaptureProgress(current, total) {
 	context.textBaseline = 'middle';
 	context.fillText(`Capturando datos para ${selectedLetter}...`, canvas.width / 2, barY - 40);
 	context.fillText(`${current}/${total} muestras`, canvas.width / 2, barY + barHeight + 30);
-	
+
 	context.restore();
 }
 
 // Finalizar captura y entrenar modelo
 function finishCapture(samplesCollected) {
 	console.log(`Captura finalizada. ${samplesCollected} muestras recolectadas para ${selectedLetter}`);
-	
+
 	// Mostrar mensaje de finalización antes de limpiar
 	showCompletionMessage(samplesCollected);
-	
+
 	// Limpiar canvas después de un breve delay para que la cámara pueda continuar normalmente
 	setTimeout(() => {
 		context.clearRect(0, 0, canvas.width, canvas.height);
 	}, 1500);
-	
+
 	// Actualizar contador de muestras
 	updateSampleCount();
-	
+
 	// Entrenar modelo si hay suficientes datos
 	if (trainingData.length >= 50) {
 		trainModel();
 	}
-	
+
 	// Guardar datos
 	saveTrainingData();
-	
+
 	// Limpiar selección
 	const selectedElement = document.querySelector('.letter-item.selected');
 	if (selectedElement) {
 		selectedElement.classList.remove('selected');
 	}
 	selectedLetter = null;
-	
+
 	console.log(`Total de muestras en el dataset: ${trainingData.length}`);
 }
 
 // Entrenar modelo
 async function trainModel() {
 	console.log('Entrenando modelo...');
-	
+
 	try {
 		model = new SimpleRandomForest(30);
 		model.fit(trainingData, trainingLabels);
-		
+
 		// Calcular precisión simple
 		const accuracy = calculateAccuracy();
 		console.log(`Modelo entrenado con precisión: ${(accuracy * 100).toFixed(1)}%`);
-		
+
 		// Guardar modelo
 		saveModel();
-		
+
 	} catch (error) {
 		console.error('Error al entrenar el modelo:', error);
 	}
@@ -463,21 +458,21 @@ async function trainModel() {
 // Calcular precisión del modelo
 function calculateAccuracy() {
 	if (!model || trainingData.length < 10) return 0;
-	
+
 	let correct = 0;
 	const testSize = Math.min(100, Math.floor(trainingData.length * 0.2));
-	
+
 	for (let i = 0; i < testSize; i++) {
 		const randomIndex = Math.floor(Math.random() * trainingData.length);
 		const features = trainingData[randomIndex];
 		const actualLabel = trainingLabels[randomIndex];
 		const prediction = model.predict([features])[0];
-		
+
 		if (prediction === actualLabel) {
 			correct++;
 		}
 	}
-	
+
 	return correct / testSize;
 }
 
@@ -485,18 +480,18 @@ function calculateAccuracy() {
 function updateSampleCount() {
 	const totalSamples = trainingData.length;
 	sampleCountElement.textContent = totalSamples;
-	
+
 	// Actualizar indicadores visuales en las letras
 	const letterCounts = {};
 	ALPHABET.forEach(letter => letterCounts[letter] = 0);
 	trainingLabels.forEach(label => {
 		if (label in letterCounts) letterCounts[label]++;
 	});
-	
+
 	document.querySelectorAll('.letter-item').forEach(item => {
 		const letter = item.dataset.letter;
 		const count = letterCounts[letter];
-		
+
 		item.classList.remove('has-data');
 		if (count > 0) {
 			item.classList.add('has-data');
@@ -550,26 +545,26 @@ function loadModel() {
 // Mostrar mensaje de completación
 function showCompletionMessage(samplesCollected) {
 	context.save();
-	
+
 	// Fondo semi-transparente
 	context.fillStyle = 'rgba(0, 100, 0, 0.8)';
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	
+
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
-	
+
 	// Mensaje principal
 	context.fillStyle = '#FFFFFF';
 	context.font = 'bold 28px Arial';
 	context.textAlign = 'center';
 	context.textBaseline = 'middle';
 	context.fillText('✅ ¡Completado!', centerX, centerY - 30);
-	
+
 	// Detalles
 	context.font = 'bold 18px Arial';
 	context.fillText(`${samplesCollected} muestras recolectadas para ${selectedLetter}`, centerX, centerY + 10);
 	context.fillText(`Total en dataset: ${trainingData.length}`, centerX, centerY + 40);
-	
+
 	context.restore();
 }
 

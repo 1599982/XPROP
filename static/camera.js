@@ -27,15 +27,15 @@ hands.onResults((results) => {
 		currentHandLandmarks = null;
 		isHandDetected = false;
 	}
-	
+
 	// No dibujar si hay overlays activos
 	if (window.countdownActive || window.isCapturing) {
 		return;
 	}
-	
+
 	context.save();
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	
+
 	// Dibujar imagen de video
 	context.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
@@ -46,7 +46,7 @@ hands.onResults((results) => {
 			color: "#00ff00",
 			lineWidth: 3
 		});
-		
+
 		// Dibujar puntos de referencia
 		drawLandmarks(context, currentHandLandmarks, {
 			color: "#ff0000",
@@ -64,27 +64,27 @@ hands.onResults((results) => {
 // Mostrar advertencia cuando no se detecta mano
 function drawNoHandWarning() {
 	context.save();
-	
+
 	// Fondo transparente
-	context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+	context.fillStyle = 'rgba(0, 0, 0, 0.5)';
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	
+
 	// Texto de advertencia centrado
 	context.fillStyle = '#ffffff';
 	context.font = 'bold 24px Arial';
 	context.textAlign = 'center';
 	context.textBaseline = 'middle';
-	
+
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
-	
+
 	// Texto principal
-	context.fillText('⚠️ Coloca tu mano frente a la cámara', centerX, centerY - 20);
-	
+	context.fillText("No se detecta ninguna mano", centerX, centerY - 20);
+
 	// Texto secundario
 	context.font = 'bold 16px Arial';
 	context.fillText('Asegúrate de que esté bien iluminada', centerX, centerY + 20);
-	
+
 	context.restore();
 }
 
@@ -108,10 +108,10 @@ async function initCamera() {
 		console.log('Inicializando cámara...');
 		await camera.start();
 		console.log('Cámara iniciada correctamente');
-		
+
 		// Mostrar mensaje de estado
 		showCameraStatus('Cámara conectada', 'success');
-		
+
 	} catch (error) {
 		console.error('Error al inicializar la cámara:', error);
 		showCameraStatus('Error: No se pudo acceder a la cámara', 'error');
@@ -121,22 +121,22 @@ async function initCamera() {
 // Mostrar estado de la cámara
 function showCameraStatus(message, type) {
 	context.save();
-	
+
 	// Limpiar canvas
 	context.fillStyle = '#000000';
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	
+
 	// Configurar texto
 	context.fillStyle = type === 'error' ? '#ff0000' : '#00ff00';
 	context.font = 'bold 20px Arial';
 	context.textAlign = 'center';
 	context.textBaseline = 'middle';
-	
+
 	// Mostrar mensaje
 	context.fillText(message, canvas.width / 2, canvas.height / 2);
-	
+
 	context.restore();
-	
+
 	// Auto-ocultar mensaje de éxito después de 2 segundos
 	if (type === 'success') {
 		setTimeout(() => {
@@ -158,7 +158,7 @@ function checkBrowserCompatibility() {
 // Función para manejar errores de permisos
 function handlePermissionError(error) {
 	console.error('Error de permisos de cámara:', error);
-	
+
 	if (error.name === 'NotAllowedError') {
 		showCameraStatus('Permiso de cámara denegado', 'error');
 	} else if (error.name === 'NotFoundError') {
@@ -205,7 +205,7 @@ export function calibrateDetection(sensitivity = 'medium') {
 			minTrackingConfidence: 0.7
 		}
 	};
-	
+
 	const config = configs[sensitivity] || configs.medium;
 	hands.setOptions(config);
 	console.log(`Sensibilidad de detección ajustada a: ${sensitivity}`);
@@ -214,15 +214,15 @@ export function calibrateDetection(sensitivity = 'medium') {
 // Inicialización mejorada
 document.addEventListener("DOMContentLoaded", async () => {
 	console.log('Iniciando sistema de cámara...');
-	
+
 	// Verificar compatibilidad
 	if (!checkBrowserCompatibility()) {
 		return;
 	}
-	
+
 	// Mostrar mensaje de carga
 	showCameraStatus('Cargando cámara...', 'info');
-	
+
 	// Inicializar cámara con manejo de errores
 	try {
 		await initCamera();

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrenamiento - Números</title>
+
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/numbers.css') }}" />
+</head>
+<body>
+  <!-- Título -->
+  <h2 class="title">Entrenamiento - Números</h2>
+
+  <!-- Marco azul -->
+  <div class="content-box">
+    <!-- Sidebar -->
+	<div class="sidebar">
+		<button onclick="window.location.href='/'">
+			<img src="{{ url_for('static', filename='images/icons/home.png') }}" alt="Inicio">
+		</button>
+		<button onclick="window.location.href='/previsione/alfabeto'">
+			<img src="{{ url_for('static', filename='images/icons/letters.png') }}" alt="Letras">
+		</button>
+		<button onclick="window.location.href='/previsione/numeri'">
+			<img src="{{ url_for('static', filename='images/icons/numbers.png') }}" alt="Número">
+		</button>
+		<button onclick="window.location.href='/allenamiento'">
+			<img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenando">
+		</button>
+		<button onclick="window.location.href='/'">
+			<img src="{{ url_for('static', filename='images/icons/user.png') }}" alt="Usuario">
+		</button>
+	</div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <!-- Sección izquierda -->
+      <div class="left-section">
+        <!-- Detectores -->
+        <div class="detectores">
+          <div class="detector">
+            <div class="detector-header">
+              <span>Detector 123</span>
+              <span class="icon">⋮</span>
+            </div>
+            <div class="detector-body">
+              <div class="icon-box">+</div>
+              <div class="progress-bar"><div class="progress" style="width: 75%;">75%</div></div>
+            </div>
+            <div class="detector-footer">Mano Izquierda</div>
+          </div>
+
+          <div class="detector">
+            <div class="detector-header">
+              <span>Detector 123</span>
+              <span class="icon">⋮</span>
+            </div>
+            <div class="detector-body">
+              <div class="icon-box">+</div>
+              <div class="progress-bar"><div class="progress" style="width: 63%;">63%</div></div>
+            </div>
+            <div class="detector-footer">Mano Izquierda</div>
+          </div>
+        </div>
+
+        <!-- Operación matemática -->
+        <div class="operation-box">X + X = X</div>
+
+        <!-- Números -->
+        <div class="numbers-container">
+          <div class="numbers-grid">
+            <div class="number-item"><img src="imagenes/iconos/numeros/0.png" alt="0"><span>0</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/1.png" alt="1"><span>1</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/2.png" alt="2"><span>2</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/3.png" alt="3"><span>3</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/4.png" alt="4"><span>4</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/5.png" alt="5"><span>5</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/6.png" alt="6"><span>6</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/7.png" alt="7"><span>7</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/8.png" alt="8"><span>8</span></div>
+            <div class="number-item"><img src="imagenes/iconos/numeros/9.png" alt="9"><span>9</span></div>
+          </div>
+        </div>
+
+        <!-- Botones de operaciones -->
+        <div class="operations-buttons">
+          <button>SUMA</button>
+          <button>RESTA</button>
+          <button>MULTIPLICACION</button>
+          <button>DIVISION</button>
+        </div>
+      </div>
+
+      <!-- Sección derecha -->
+      <div class="right-section">
+        <div class="camera-area">
+          <div class="camera-placeholder">
+            <p>Área de captura de cámara</p>
+            <button id="start-camera" class="camera-btn">Iniciar Cámara</button>
+            <video id="video" autoplay muted style="display:none;"></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="numero-script.js"></script>
+</body>
+</html>
