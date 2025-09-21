@@ -1,0 +1,251 @@
+/* ====== Estilos específicos para la página de entrenamiento ====== */
+
+/* Botón activo en la barra lateral */
+.sidebar button.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+/* Contenido principal */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  gap: 40px;
+  padding: 20px;
+}
+
+/* Sección de opciones de entrenamiento */
+.training-options {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+}
+
+.training-card {
+  background: #fff;
+  border: 2px solid #ddd;
+  border-radius: 16px;
+  padding: 30px 40px;
+  width: 280px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.training-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #5fa8e8;
+}
+
+.training-card h3 {
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.training-icon {
+  width: 80px;
+  height: 80px;
+  background: #e8f4fd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.training-card:hover .training-icon {
+  background: #5fa8e8;
+}
+
+.training-icon img {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  filter: brightness(0.8);
+}
+
+.training-card:hover .training-icon img {
+  filter: brightness(0) invert(1);
+}
+
+/* Sección de modelos entrenados */
+.models-section {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.models-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.models-container {
+  background: #fff;
+  border: 2px solid #5fa8e8;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(95, 168, 232, 0.1);
+}
+
+.model-item {
+  margin-bottom: 25px;
+}
+
+.model-item:last-child {
+  margin-bottom: 0;
+}
+
+.model-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.model-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.model-percentage {
+  font-size: 16px;
+  font-weight: bold;
+  color: #5fa8e8;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background-color: #e0e7ff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5fa8e8 0%, #004aad 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+/* Responsive para pantallas medianas */
+@media (max-width: 1024px) {
+  .training-options {
+    gap: 30px;
+  }
+
+  .training-card {
+    width: 240px;
+    height: 180px;
+    padding: 25px 30px;
+  }
+
+  .training-card h3 {
+    font-size: 20px;
+  }
+
+  .training-icon {
+    width: 70px;
+    height: 70px;
+  }
+
+  .training-icon img {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 15px;
+    gap: 30px;
+  }
+
+  .training-options {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .training-card {
+    width: 100%;
+    max-width: 320px;
+    height: 160px;
+    padding: 20px;
+  }
+
+  .training-card h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .training-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .training-icon img {
+    width: 35px;
+    height: 35px;
+  }
+
+  .models-container {
+    padding: 20px;
+  }
+
+  .models-title {
+    font-size: 20px;
+  }
+
+  .model-name {
+    font-size: 16px;
+  }
+
+  .model-percentage {
+    font-size: 14px;
+  }
+}
+
+/* Responsive para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .training-card {
+    height: 140px;
+    padding: 15px;
+  }
+
+  .training-card h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .training-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .training-icon img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .models-container {
+    padding: 15px;
+  }
+}

@@ -1,19 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Document</title>
-	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-</head>
-<body>
-	<div class="container">
-		<video id="video"></video>
-		<canvas id="canvas" width="1280px" height="720px"></canvas>
-	</div>
-	<script src="{{ url_for('static', filename='main.js') }}" defer></script>
-</body>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>American Sign Language :)</title>
+
+    <!-- Fuente Konkhmer Sleokchher -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
+  </head>
+  <body>
+    <!-- Título -->
+    <h2 class="title">Inicio</h2>
+
+    <!-- Único cuadro azul -->
+    <div class="content-box">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/home.png') }}" alt="Inicio" />
+        </button>
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/letters.png') }}" alt="Letras" />
+        </button>
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/numbers.png') }}" alt="Número" />
+        </button>
+        <button onclick="window.location.href='/allenamiento'">
+          	<img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenando" />
+        </button>
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/user.png') }}" alt="Usuario" />
+        </button>
+      </div>
+
+      <!-- Columna izquierda con flip-cards -->
+      <div class="images-column">
+        <!-- Primera tarjeta -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <img src="{{ url_for('static', filename='images/home_1.png') }}" alt="Imagen señas 1" />
+            </div>
+            <div class="flip-card-back">
+              <h3>Páginas web</h3>
+              <ul>
+                <li><a href="https://www.handspeak.com/">HandSpeak</a></li>
+                <li><a href="https://www.lingvano.com/asl/">Lingvano</a></li>
+                <li><a href="https://www.signschool.com/">SignSchool</a></li>
+                <li><a href="https://www.startasl.com/">StartASL</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segunda tarjeta -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <img src="{{ url_for('static', filename='images/home_2.png') }}" alt="Imagen señas 2" />
+            </div>
+            <div class="flip-card-back">
+              <h3>Videos</h3>
+              <ul>
+                <li>
+                  <a href="https://www.youtube.com/watch?v=xEsI4vFBLSQ"
+                    >Aprende letras</a
+                  >
+                </li>
+                <li>
+                  <a href="https://www.youtube.com/watch?v=a6acSnCkLRA"
+                    >Aprende números</a
+                  >
+                </li>
+                <li>
+                  <a href="https://www.youtube.com/watch?v=qG1CQFiHX6c"
+                    >Aprende palabras</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Texto a la derecha -->
+      <div class="text">
+        <p>
+          El lenguaje de señas es esencial porque permite a las personas sordas
+          y con discapacidad auditiva comunicarse plenamente, acceder a la
+          educación, al trabajo y a la vida social sin barreras. Es su lengua
+          natural y constituye un derecho humano y lingüístico. Sin él, se
+          limitan sus oportunidades y se refuerza la exclusión.
+        </p>
+        <p>
+          Además, favorece el desarrollo cognitivo y lingüístico en niños
+          sordos, al darles acceso temprano a un sistema de comunicación.
+          También potencia habilidades como la memoria visual, la atención y la
+          coordinación manual-visual. A nivel social, promueve la inclusión, el
+          respeto a la diversidad y la comprensión de la cultura sorda.
+        </p>
+        <p>
+          Tener una página web para aprender lenguaje de señas es muy
+          importante, ya que brinda acceso libre y permanente a recursos de
+          aprendizaje, incluso para quienes no cuentan con escuelas o
+          instructores cercanos. Estas plataformas aprovechan recursos visuales
+          —videos, animaciones, diccionarios interactivos— para facilitar el
+          aprendizaje y la práctica. Además, crean puentes entre sordos y
+          oyentes, fortaleciendo la interacción y reduciendo las barreras
+          comunicativas.
+        </p>
+      </div>
+    </div>
+  </body>
 </html>

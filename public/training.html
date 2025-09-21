@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrenamiento</title>
+
+    <!-- Fuente Konkhmer Sleokchher -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/training.css') }}" />
+  </head>
+  <body>
+    <!-- Título -->
+    <h2 class="title">Entrenamiento</h2>
+
+    <!-- Único cuadro azul -->
+    <div class="content-box">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/home.png') }}" alt="Inicio" />
+        </button>
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/letters.png') }}" alt="Letras" />
+        </button>
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/numbers.png') }}" alt="Número" />
+        </button>
+        <button onclick="window.location.href='/allenamiento'">
+          	<img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenando" />
+        </button>
+        <button onclick="window.location.href='/'">
+        	<img src="{{ url_for('static', filename='images/icons/user.png') }}" alt="Usuario" />
+        </button>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="main-content">
+        <!-- Botones principales de entrenamiento -->
+        <div class="training-options">
+          <div
+            class="training-card"
+            onclick="window.location.href='numero.html'"
+          >
+            <h3>Entrenar los 123</h3>
+            <div class="training-icon">
+              <img
+                src="{{ url_for('static', filename='images/icons/training.png') }}"
+                alt="Entrenar números"
+              />
+            </div>
+          </div>
+
+          <div
+            class="training-card"
+            onclick="window.location.href='allenamiento/alfabeto'"
+          >
+            <h3>Entrenar el ABC</h3>
+            <div class="training-icon">
+              <img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenar letras" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de modelos entrenados -->
+        <div class="models-section">
+          <h3 class="models-title">Modelos Entrenados</h3>
+          <div class="models-container">
+            <div class="model-item">
+              <div class="model-info">
+                <span class="model-name">Abecedario</span>
+                <span class="model-percentage">75%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 75%"></div>
+              </div>
+            </div>
+
+            <div class="model-item">
+              <div class="model-info">
+                <span class="model-name">Numero</span>
+                <span class="model-percentage">73%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 73%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
