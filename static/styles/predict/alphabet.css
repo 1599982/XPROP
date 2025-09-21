@@ -194,7 +194,7 @@
   border: 1px solid #ddd;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease, box-shadow 0.3s ease, transform 0.3s ease;
   background: #fff;
   width: 45px;
   height: 65px;
@@ -228,6 +228,40 @@
 
 .letter-item.selected span {
   color: white;
+}
+
+/* Iluminación para letra detectada */
+.letter-item.detected {
+  background-color: #4caf50;
+  color: white;
+  border-color: #388e3c;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.8), 0 0 40px rgba(76, 175, 80, 0.4);
+  transform: scale(1.15);
+  z-index: 10;
+  position: relative;
+  animation: pulse-detected 2s infinite;
+}
+
+.letter-item.detected span {
+  color: white;
+  font-weight: bold;
+}
+
+.letter-item.detected img {
+  filter: brightness(1.3) contrast(1.2);
+  transition: filter 0.3s ease;
+}
+
+@keyframes pulse-detected {
+  0% { 
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.8), 0 0 40px rgba(76, 175, 80, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 25px rgba(76, 175, 80, 1), 0 0 50px rgba(76, 175, 80, 0.6);
+  }
+  100% { 
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.8), 0 0 40px rgba(76, 175, 80, 0.4);
+  }
 }
 
 /* Estilos para detectores actualizados */

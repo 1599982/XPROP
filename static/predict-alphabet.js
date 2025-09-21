@@ -13,6 +13,9 @@ let model = null;
 let letterGrid;
 let letterTemplate;
 
+// Highlighting optimization
+let currentHighlightedLetter = null;
+
 // Variables para detección - mano izquierda (letras)
 let leftHandLetterConfidence = 0;
 let lastDetectedLetterLeft = null;
@@ -759,6 +762,9 @@ function updateDetectorUI() {
             handProgressRightElement.textContent = `${rightHandStateConfidence}%`;
         }
     }
+
+    // Actualizar iluminación del alfabeto
+    updateAlphabetHighlight();
 }
 
 // Verificar condiciones y escribir letra
@@ -840,6 +846,14 @@ function resetLeftHandDetection() {
     if (letterProgressLeftElement) {
         letterProgressLeftElement.style.width = '0%';
         letterProgressLeftElement.textContent = '0%';
+    }
+
+    // Limpiar iluminación del alfabeto
+    if (currentHighlightedLetter) {
+        document.querySelectorAll('.letter-item').forEach(item => {
+            item.classList.remove('detected');
+        });
+        currentHighlightedLetter = null;
     }
 }
 
@@ -941,6 +955,45 @@ function generateAlphabet() {
     console.log('Letras generadas:', ALPHABET.join(', '));
 }
 
+// Actualizar iluminación del alfabeto basado en detección
+function updateAlphabetHighlight() {
+    let letterToHighlight = null;
+
+    // Determinar qué letra debe estar iluminada
+    if (isLeftHandDetected) {
+        const smoothedLetter = getMostCommonLeftLetter();
+        const smoothedConfidence = getAverageLeftConfidence();
+
+        // Solo iluminar si confianza es > 50%
+        if (smoothedLetter && smoothedConfidence > 50) {
+            letterToHighlight = smoothedLetter;
+        }
+    }
+
+    // Optimización: solo actualizar DOM si cambió la letra destacada
+    if (letterToHighlight !== currentHighlightedLetter) {
+        // Remover iluminación previa
+        if (currentHighlightedLetter) {
+            document.querySelectorAll('.letter-item').forEach(item => {
+                if (item.dataset.letter === currentHighlightedLetter) {
+                    item.classList.remove('detected');
+                }
+            });
+        }
+
+        // Iluminar nueva letra
+        if (letterToHighlight) {
+            document.querySelectorAll('.letter-item').forEach(item => {
+                if (item.dataset.letter === letterToHighlight) {
+                    item.classList.add('detected');
+                }
+            });
+        }
+
+        currentHighlightedLetter = letterToHighlight;
+    }
+}
+
 // Funciones de debugging
 window.debugPrediction = {
     getLeftHandLandmarks: () => leftHandLandmarks,
@@ -966,6 +1019,26 @@ window.debugPrediction = {
     },
     regenerateAlphabet: () => {
         generateAlphabet();
+    },
+    highlightLetter: (letter) => {
+        // Limpiar iluminación previa
+        document.querySelectorAll('.letter-item').forEach(item => {
+            item.classList.remove('detected');
+        });
+
+        // Iluminar letra específica
+        if (letter && ALPHABET.includes(letter.toUpperCase())) {
+            document.querySelectorAll('.letter-item').forEach(item => {
+                if (item.dataset.letter === letter.toUpperCase()) {
+                    item.classList.add('detected');
+                }
+            });
+        }
+    },
+    clearHighlight: () => {
+        document.querySelectorAll('.letter-item').forEach(item => {
+            item.classList.remove('detected');
+        });
     }
 };
 
