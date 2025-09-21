@@ -5,7 +5,6 @@ const letter_grid = document.getElementById("alphabet-grid");
 const letter_template = document.getElementById("letter-content");
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
-const sampleCountElement = document.getElementById("sample-count");
 
 const ALPHABET = [
 	"A", "B", "C",
@@ -296,9 +295,7 @@ function drawCountdown(number) {
 	// Guardar el estado del canvas
 	context.save();
 
-	// Fondo semi-transparente
-	context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-	context.fillRect(0, 0, canvas.width, canvas.height);
+	// Fondo transparente (removido para hacer el cronómetro transparente)
 
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
@@ -351,8 +348,8 @@ function startDataCapture() {
 			}
 		}
 
-		// Mostrar progreso en el canvas
-		drawCaptureProgress(samplesCollected, maxSamples);
+		// Actualizar progreso en el header
+		updateProgressBar(samplesCollected, maxSamples);
 
 	}, captureInterval);
 
@@ -365,54 +362,21 @@ function startDataCapture() {
 	}, captureTime);
 }
 
-// Dibujar progreso de captura
-function drawCaptureProgress(current, total) {
-	// Limpiar completamente el canvas primero
-	context.clearRect(0, 0, canvas.width, canvas.height);
+// Actualizar la barra de progreso en el header
+function updateProgressBar(current, total) {
+	const progressFill = document.getElementById('progress-fill');
+	const progressText = document.getElementById('progress-text');
 
-	context.save();
-
-	// Fondo semi-transparente
-	context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-	context.fillRect(0, 0, canvas.width, canvas.height);
-
-	// Barra de progreso
-	const barWidth = 300;
-	const barHeight = 20;
-	const barX = (canvas.width - barWidth) / 2;
-	const barY = canvas.height / 2;
-
-	// Fondo de la barra
-	context.fillStyle = '#333333';
-	context.fillRect(barX, barY, barWidth, barHeight);
-
-	// Progreso
-	const progress = current / total;
-	context.fillStyle = '#00FF00';
-	context.fillRect(barX, barY, barWidth * progress, barHeight);
-
-	// Texto
-	context.fillStyle = '#FFFFFF';
-	context.font = 'bold 24px Arial';
-	context.textAlign = 'center';
-	context.textBaseline = 'middle';
-	context.fillText(`Capturando datos para ${selectedLetter}...`, canvas.width / 2, barY - 40);
-	context.fillText(`${current}/${total} muestras`, canvas.width / 2, barY + barHeight + 30);
-
-	context.restore();
+	if (progressFill && progressText) {
+		const percentage = Math.round((current / total) * 100);
+		progressFill.style.width = `${percentage}%`;
+		progressText.textContent = `${percentage}%`;
+	}
 }
 
 // Finalizar captura y entrenar modelo
 function finishCapture(samplesCollected) {
 	console.log(`Captura finalizada. ${samplesCollected} muestras recolectadas para ${selectedLetter}`);
-
-	// Mostrar mensaje de finalización antes de limpiar
-	showCompletionMessage(samplesCollected);
-
-	// Limpiar canvas después de un breve delay para que la cámara pueda continuar normalmente
-	setTimeout(() => {
-		context.clearRect(0, 0, canvas.width, canvas.height);
-	}, 1500);
 
 	// Actualizar contador de muestras
 	updateSampleCount();
@@ -479,7 +443,6 @@ function calculateAccuracy() {
 // Actualizar contador de muestras
 function updateSampleCount() {
 	const totalSamples = trainingData.length;
-	sampleCountElement.textContent = totalSamples;
 
 	// Actualizar indicadores visuales en las letras
 	const letterCounts = {};
@@ -542,31 +505,7 @@ function loadModel() {
 	}
 }
 
-// Mostrar mensaje de completación
-function showCompletionMessage(samplesCollected) {
-	context.save();
 
-	// Fondo semi-transparente
-	context.fillStyle = 'rgba(0, 100, 0, 0.8)';
-	context.fillRect(0, 0, canvas.width, canvas.height);
-
-	const centerX = canvas.width / 2;
-	const centerY = canvas.height / 2;
-
-	// Mensaje principal
-	context.fillStyle = '#FFFFFF';
-	context.font = 'bold 28px Arial';
-	context.textAlign = 'center';
-	context.textBaseline = 'middle';
-	context.fillText('✅ ¡Completado!', centerX, centerY - 30);
-
-	// Detalles
-	context.font = 'bold 18px Arial';
-	context.fillText(`${samplesCollected} muestras recolectadas para ${selectedLetter}`, centerX, centerY + 10);
-	context.fillText(`Total en dataset: ${trainingData.length}`, centerX, centerY + 40);
-
-	context.restore();
-}
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
