@@ -117,20 +117,20 @@
 				
 				<!-- Operaciones Matemáticas -->
 				<div class="letter-item operation-item" data-letter="S">
+					<img src="{{ url_for('static', filename='images/icons/letters/S.png') }}" alt="S">
 					<div class="operation-symbol">+</div>
-					<span>S</span>
 				</div>
 				<div class="letter-item operation-item" data-letter="R">
+					<img src="{{ url_for('static', filename='images/icons/letters/R.png') }}" alt="R">
 					<div class="operation-symbol">-</div>
-					<span>R</span>
 				</div>
 				<div class="letter-item operation-item" data-letter="M">
+					<img src="{{ url_for('static', filename='images/icons/letters/M.png') }}" alt="M">
 					<div class="operation-symbol">×</div>
-					<span>M</span>
 				</div>
 				<div class="letter-item operation-item" data-letter="D">
+					<img src="{{ url_for('static', filename='images/icons/letters/D.png') }}" alt="D">
 					<div class="operation-symbol">÷</div>
-					<span>D</span>
 				</div>
 				<div class="letter-item operation-item equal-item" data-letter="I">
 					<img src="{{ url_for('static', filename='images/icons/letters/I.png') }}" alt="I">
@@ -179,20 +179,24 @@
         border-color: #5a67d8;
       }
       
+      .operation-item img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        margin-bottom: 5px;
+        filter: brightness(0) invert(1);
+      }
+      
       .operation-symbol {
-        font-size: 2em;
+        font-size: 1.5em;
         font-weight: bold;
         color: white;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        margin-bottom: 5px;
+        margin-bottom: 0;
         line-height: 1;
       }
       
-      .operation-item span {
-        font-size: 0.9em;
-        color: white;
-        font-weight: bold;
-      }
+
       
       .operation-item:hover {
         background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);

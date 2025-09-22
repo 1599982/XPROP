@@ -44,7 +44,7 @@ let writeStatusElement;
 
 // Configuración
 const DETECTION_INTERVAL = 200; // ms entre detecciones
-const CONFIDENCE_THRESHOLD = 80; // Umbral para escribir letra
+const CONFIDENCE_THRESHOLD = 70; // Umbral para escribir letra
 const HISTORY_SIZE = 5; // Tamaño del historial para suavizado
 const HAND_CLOSE_THRESHOLD = 0.3; // Umbral para detectar mano cerrada
 const MIN_WRITE_INTERVAL = 800; // ms mínimo entre escrituras de la misma letra
@@ -929,9 +929,10 @@ function updateWriteStatus() {
     const timeSinceLastWrite = currentTime - lastWriteTime;
 
     if (!isLeftHandDetected || !isRightHandDetected) {
-        writeStatusElement.textContent = "⚠️ Faltan manos";
-        writeStatusElement.classList.remove('ready', 'cooldown');
+        writeStatusElement.style.display = 'none';
         return;
+    } else {
+        writeStatusElement.style.display = 'inline-block';
     }
 
     const smoothedLeftConfidence = getAverageLeftConfidence();
