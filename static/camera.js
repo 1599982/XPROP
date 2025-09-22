@@ -40,11 +40,7 @@ function drawResults(results) {
 	// Dibujar imagen de video siempre
 	context.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-	// Si hay cronómetro activo, no dibujar landmarks
-	if (window.countdownActive) {
-		context.restore();
-		return;
-	}
+	// Ya no necesitamos verificar countdownActive porque el cronómetro usa DIV overlay
 
 	// Procesar detección de manos para visualización
 	if (isHandDetected && currentHandLandmarks) {
@@ -61,15 +57,8 @@ function drawResults(results) {
 			radius: 3
 		});
 
-		// Etiqueta para la mano (diferente si está capturando)
-		const label = window.isCapturing ? "CAPTURANDO DATOS..." : "MANO DETECTADA";
-		const color = window.isCapturing ? "#ff6b35" : "#00ff00";
-		drawHandLabel(currentHandLandmarks[0], label, color);
-
-		// Indicador visual adicional durante captura
-		if (window.isCapturing) {
-			drawCaptureIndicator();
-		}
+		// Etiqueta para la mano
+		drawHandLabel(currentHandLandmarks[0], "MANO DETECTADA", "#00ff00");
 	} else {
 		// Mostrar advertencia cuando no hay mano detectada
 		drawNoHandMessage();
@@ -127,34 +116,7 @@ function drawNoHandMessage() {
 	context.restore();
 }
 
-// Dibujar indicador de captura activa
-function drawCaptureIndicator() {
-	context.save();
 
-	// Círculo pulsante en la esquina superior derecha
-	const x = canvas.width - 50;
-	const y = 50;
-	const radius = 20;
-
-	// Animación pulsante basada en tiempo
-	const time = Date.now();
-	const pulse = Math.sin(time / 200) * 0.3 + 0.7; // Pulsa entre 0.4 y 1.0
-
-	// Círculo de fondo
-	context.fillStyle = `rgba(255, 107, 53, ${pulse})`;
-	context.beginPath();
-	context.arc(x, y, radius, 0, 2 * Math.PI);
-	context.fill();
-
-	// Texto "REC"
-	context.fillStyle = '#ffffff';
-	context.font = 'bold 12px Arial';
-	context.textAlign = 'center';
-	context.textBaseline = 'middle';
-	context.fillText('REC', x, y);
-
-	context.restore();
-}
 
 // Configuración de la cámara con mejor manejo de errores
 const camera = new Camera(video, {
@@ -177,9 +139,6 @@ async function initCamera() {
 		await camera.start();
 		console.log('Cámara iniciada correctamente');
 
-		// Mostrar mensaje de estado
-		showCameraStatus('Cámara conectada', 'success');
-
 	} catch (error) {
 		console.error('Error al inicializar la cámara:', error);
 		showCameraStatus('Error: No se pudo acceder a la cámara', 'error');
@@ -188,28 +147,24 @@ async function initCamera() {
 
 // Mostrar estado de la cámara
 function showCameraStatus(message, type) {
-	context.save();
+	// Solo mostrar mensajes de error, no de éxito
+	if (type === 'error') {
+		context.save();
 
-	// Limpiar canvas
-	context.fillStyle = '#000000';
-	context.fillRect(0, 0, canvas.width, canvas.height);
+		// Limpiar canvas
+		context.fillStyle = '#000000';
+		context.fillRect(0, 0, canvas.width, canvas.height);
 
-	// Configurar texto
-	context.fillStyle = type === 'error' ? '#ff0000' : '#00ff00';
-	context.font = 'bold 20px Arial';
-	context.textAlign = 'center';
-	context.textBaseline = 'middle';
+		// Configurar texto
+		context.fillStyle = '#ff0000';
+		context.font = 'bold 20px Arial';
+		context.textAlign = 'center';
+		context.textBaseline = 'middle';
 
-	// Mostrar mensaje
-	context.fillText(message, canvas.width / 2, canvas.height / 2);
+		// Mostrar mensaje
+		context.fillText(message, canvas.width / 2, canvas.height / 2);
 
-	context.restore();
-
-	// Auto-ocultar mensaje de éxito después de 2 segundos
-	if (type === 'success') {
-		setTimeout(() => {
-			context.clearRect(0, 0, canvas.width, canvas.height);
-		}, 2000);
+		context.restore();
 	}
 }
 
