@@ -36,9 +36,6 @@
 		<button onclick="window.location.href='/allenamiento'">
 			<img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenando">
 		</button>
-		<button onclick="window.location.href='/'">
-			<img src="{{ url_for('static', filename='images/icons/user.png') }}" alt="Usuario">
-		</button>
 	</div>
 
 
@@ -114,7 +111,7 @@
 					<img src="{{ url_for('static', filename='images/icons/numbers/9.png') }}" alt="9">
 					<span>9</span>
 				</div>
-				
+
 				<!-- Operaciones Matemáticas -->
 				<div class="letter-item operation-item" data-letter="S">
 					<img src="{{ url_for('static', filename='images/icons/letters/S.png') }}" alt="S">
@@ -178,7 +175,7 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-color: #5a67d8;
       }
-      
+
       .operation-item img {
         width: 32px;
         height: 32px;
@@ -186,7 +183,7 @@
         margin-bottom: 5px;
         filter: brightness(0) invert(1);
       }
-      
+
       .operation-symbol {
         font-size: 1.5em;
         font-weight: bold;
@@ -195,22 +192,22 @@
         margin-bottom: 0;
         line-height: 1;
       }
-      
 
-      
+
+
       .operation-item:hover {
         background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
       }
-      
+
       .equal-item {
         background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
         border-color: #e55039 !important;
       }
-      
+
       .equal-item:hover {
         background: linear-gradient(135deg, #e55039 0%, #c23616 100%) !important;
       }
-      
+
       .equal-item img {
         width: 32px;
         height: 32px;
@@ -218,7 +215,7 @@
         margin-bottom: 5px;
         filter: brightness(0) invert(1);
       }
-      
+
       .equal-item span {
         color: white !important;
         font-size: 1.2em;

@@ -20,15 +20,12 @@
 .content-box {
   display: flex;
   flex-direction: row;
-  width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
-  box-sizing: border-box;
 }
 
 /* Sidebar fijo y seccion principal flexible */
 .sidebar {
-  width: 80px;
+  width: 70px;
   flex-shrink: 0;
 }
 
@@ -253,13 +250,13 @@
 }
 
 @keyframes pulse-detected {
-  0% { 
+  0% {
     box-shadow: 0 0 20px rgba(76, 175, 80, 0.8), 0 0 40px rgba(76, 175, 80, 0.4);
   }
-  50% { 
+  50% {
     box-shadow: 0 0 25px rgba(76, 175, 80, 1), 0 0 50px rgba(76, 175, 80, 0.6);
   }
-  100% { 
+  100% {
     box-shadow: 0 0 20px rgba(76, 175, 80, 0.8), 0 0 40px rgba(76, 175, 80, 0.4);
   }
 }
