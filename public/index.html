@@ -12,6 +12,7 @@
     />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/virtual-mouse-overlay.css') }}" />
   </head>
   <body>
     <!-- Título -->
@@ -78,6 +79,12 @@
                   >
                 </li>
                 <li>
+                  <a href="/mouse-virtual">🖱️ Mouse Virtual</a>
+                </li>
+                <li>
+                  <a href="/click-prototype">👆 Click Virtual</a>
+                </li>
+                <li>
                   <a href="https://www.youtube.com/watch?v=qG1CQFiHX6c"
                     >Aprende palabras</a
                   >
@@ -116,5 +123,9 @@
         </p>
       </div>
     </div>
+
+    <!-- Virtual Mouse Overlay Integration -->
+    <script src="{{ url_for('static', filename='virtual-mouse-config.js') }}"></script>
+    <script src="{{ url_for('static', filename='virtual-mouse-overlay.js') }}"></script>
   </body>
 </html>

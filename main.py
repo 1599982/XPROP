@@ -94,6 +94,14 @@ def all_alfabeto():
 def all_numeri():
     return render_template("training/numbers.html")
 
+@app.route('/mouse-virtual')
+def virtual_mouse():
+    return render_template("virtual_mouse.html")
+
+@app.route('/click-prototype')
+def click_prototype():
+    return render_template("click_prototype.html")
+
 # APIs para el manejo de datos de entrenamiento
 
 @app.route('/api/training/save', methods=['POST'])

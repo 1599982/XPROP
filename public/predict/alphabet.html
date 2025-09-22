@@ -13,6 +13,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/alphabet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/virtual-mouse-overlay.css') }}">
 
   </head>
   <body>
@@ -114,5 +115,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='predict.alphabet.js') }}" type="module"></script>
+
+    <!-- Virtual Mouse Overlay Integration -->
+    <script src="{{ url_for('static', filename='virtual-mouse-overlay.js') }}"></script>
   </body>
 </html>

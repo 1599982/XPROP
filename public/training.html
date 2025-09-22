@@ -13,6 +13,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/training.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/virtual-mouse-overlay.css') }}" />
   </head>
   <body>
     <!-- Título -->
@@ -203,5 +204,9 @@
       // No necesitamos escuchar localStorage ya que usamos APIs
       // Las actualizaciones se manejan mediante el intervalo de 5 segundos
     </script>
+
+    <!-- Virtual Mouse Overlay Integration -->
+    <script src="{{ url_for('static', filename='virtual-mouse-config.js') }}"></script>
+    <script src="{{ url_for('static', filename='virtual-mouse-overlay.js') }}"></script>
   </body>
 </html>

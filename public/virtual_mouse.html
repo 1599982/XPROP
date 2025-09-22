@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse Virtual - Control por Gestos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
+    
+    <style>
+        .virtual-mouse-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .camera-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            height: 240px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #4caf50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            background: #000;
+        }
+
+        .camera-section video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-section canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Cursor virtual */
+        .virtual-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ff4444, #cc0000);
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
+            transition: all 0.1s ease-out;
+            display: none;
+        }
+
+        .virtual-cursor.clicking {
+            transform: scale(1.5);
+            background: radial-gradient(circle, #44ff44, #00cc00);
+            box-shadow: 0 0 15px rgba(68, 255, 68, 1);
+        }
+
+        /* Panel de control */
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: Arial, sans-serif;
+            z-index: 1001;
+            min-width: 300px;
+        }
+
+        .control-panel h3 {
+            margin: 0 0 15px 0;
+            color: #4caf50;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .status-value {
+            font-weight: bold;
+        }
+
+        .status-value.active {
+            color: #4caf50;
+        }
+
+        .status-value.inactive {
+            color: #ff4444;
+        }
+
+        /* Elementos de prueba */
+        .test-elements {
+            padding: 300px 50px 50px 400px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .test-button {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .test-button.clicked {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            transform: scale(0.95);
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: Arial, sans-serif;
+            z-index: 1001;
+            max-width: 300px;
+        }
+
+        .instructions h4 {
+            margin: 0 0 10px 0;
+            color: #4caf50;
+        }
+
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        /* Efectos de click */
+        .click-ripple {
+            position: fixed;
+            border: 2px solid #4caf50;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="virtual-mouse-container">
+        <!-- Panel de control -->
+        <div class="control-panel">
+            <h3>🖱️ Mouse Virtual</h3>
+            <div class="status-item">
+                <span>Estado de cámara:</span>
+                <span class="status-value inactive" id="camera-status">Desconectada</span>
+            </div>
+            <div class="status-item">
+                <span>Detección de mano:</span>
+                <span class="status-value inactive" id="hand-status">No detectada</span>
+            </div>
+            <div class="status-item">
+                <span>Posición X:</span>
+                <span class="status-value" id="pos-x">0</span>
+            </div>
+            <div class="status-item">
+                <span>Posición Y:</span>
+                <span class="status-value" id="pos-y">0</span>
+            </div>
+            <div class="status-item">
+                <span>Estado del click:</span>
+                <span class="status-value inactive" id="click-status">Inactivo</span>
+            </div>
+        </div>
+
+        <!-- Cámara -->
+        <div class="camera-section">
+            <video id="video" autoplay muted></video>
+            <canvas id="canvas" width="320" height="240"></canvas>
+        </div>
+
+        <!-- Cursor virtual -->
+        <div class="virtual-cursor" id="virtual-cursor"></div>
+
+        <!-- Instrucciones -->
+        <div class="instructions">
+            <h4>📋 Instrucciones:</h4>
+            <ul>
+                <li>🖐️ Levanta tu mano para mover el cursor</li>
+                <li>👆 Apunta con el dedo índice para mayor precisión</li>
+                <li>✊ Cierra el puño para hacer click</li>
+                <li>🎯 Prueba los botones de abajo</li>
+            </ul>
+        </div>
+
+        <!-- Elementos de prueba -->
+        <div class="test-elements">
+            <button class="test-button" onclick="testClick('Botón 1')">🎯 Botón de Prueba 1</button>
+            <button class="test-button" onclick="testClick('Botón 2')">🎮 Botón de Prueba 2</button>
+            <button class="test-button" onclick="testClick('Botón 3')">🎲 Botón de Prueba 3</button>
+            <button class="test-button" onclick="testClick('Botón 4')">🎨 Botón de Prueba 4</button>
+            <button class="test-button" onclick="testClick('Botón 5')">🎵 Botón de Prueba 5</button>
+            <button class="test-button" onclick="testClick('Botón 6')">🎪 Botón de Prueba 6</button>
+        </div>
+    </div>
+
+    <!-- Scripts de MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+        // Variables globales
+        let video, canvas, ctx;
+        let hands, camera;
+        let virtualCursor;
+        let currentHandLandmarks = null;
+        let isHandDetected = false;
+        let isClicking = false;
+        let lastClickTime = 0;
+        const CLICK_COOLDOWN = 500; // ms
+
+        // Elementos del DOM
+        const cameraStatus = document.getElementById('camera-status');
+        const handStatus = document.getElementById('hand-status');
+        const posX = document.getElementById('pos-x');
+        const posY = document.getElementById('pos-y');
+        const clickStatus = document.getElementById('click-status');
+
+        // Inicialización
+        async function init() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            virtualCursor = document.getElementById('virtual-cursor');
+
+            await setupCamera();
+            setupHandDetection();
+        }
+
+        // Configurar cámara
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1280, height: 720 }
+                });
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    cameraStatus.textContent = 'Conectada';
+                    cameraStatus.classList.remove('inactive');
+                    cameraStatus.classList.add('active');
+                };
+
+            } catch (error) {
+                console.error('Error accediendo a la cámara:', error);
+                cameraStatus.textContent = 'Error';
+                alert('No se pudo acceder a la cámara');
+            }
+        }
+
+        // Configurar detección de manos
+        function setupHandDetection() {
+            hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.5
+            });
+
+            hands.onResults(onHandsResults);
+
+            camera = new Camera(video, {
+                onFrame: async () => {
+                    await hands.send({ image: video });
+                },
+                width: 1280,
+                height: 720
+            });
+
+            camera.start();
+        }
+
+        // Procesar resultados de detección
+        function onHandsResults(results) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                currentHandLandmarks = results.multiHandLandmarks[0];
+                isHandDetected = true;
+                
+                handStatus.textContent = 'Detectada';
+                handStatus.classList.remove('inactive');
+                handStatus.classList.add('active');
+
+                // Procesar gestos
+                processHandGestures();
+                
+                // Dibujar landmarks
+                drawHandLandmarks();
+                
+            } else {
+                isHandDetected = false;
+                currentHandLandmarks = null;
+                
+                handStatus.textContent = 'No detectada';
+                handStatus.classList.remove('active');
+                handStatus.classList.add('inactive');
+                
+                // Ocultar cursor virtual
+                virtualCursor.style.display = 'none';
+            }
+        }
+
+        // Procesar gestos de la mano
+        function processHandGestures() {
+            if (!currentHandLandmarks) return;
+
+            // Obtener posición del dedo índice (landmark 8)
+            const indexFinger = currentHandLandmarks[8];
+            
+            // Convertir coordenadas a posición en pantalla
+            const screenX = (1 - indexFinger.x) * window.innerWidth;
+            const screenY = indexFinger.y * window.innerHeight;
+
+            // Actualizar posición del cursor virtual
+            updateVirtualCursor(screenX, screenY);
+
+            // Detectar gesto de click (puño cerrado)
+            const isClickGesture = detectClickGesture();
+            handleClickGesture(isClickGesture, screenX, screenY);
+        }
+
+        // Actualizar cursor virtual
+        function updateVirtualCursor(x, y) {
+            virtualCursor.style.left = x + 'px';
+            virtualCursor.style.top = y + 'px';
+            virtualCursor.style.display = 'block';
+
+            // Actualizar indicadores
+            posX.textContent = Math.round(x);
+            posY.textContent = Math.round(y);
+        }
+
+        // Detectar gesto de click (análisis de dedos)
+        function detectClickGesture() {
+            if (!currentHandLandmarks) return false;
+
+            // Landmarks de las puntas de los dedos
+            const fingerTips = [4, 8, 12, 16, 20]; // Pulgar, índice, medio, anular, meñique
+            const fingerPips = [3, 6, 10, 14, 18]; // Articulaciones medias
+
+            let closedFingers = 0;
+
+            // Verificar si cada dedo está cerrado
+            for (let i = 0; i < fingerTips.length; i++) {
+                const tip = currentHandLandmarks[fingerTips[i]];
+                const pip = currentHandLandmarks[fingerPips[i]];
+
+                // Para el pulgar, verificar en eje X
+                if (i === 0) {
+                    if (Math.abs(tip.x - pip.x) < 0.05) closedFingers++;
+                } else {
+                    // Para otros dedos, verificar en eje Y
+                    if (tip.y > pip.y) closedFingers++;
+                }
+            }
+
+            // Click si al menos 4 dedos están cerrados (puño)
+            return closedFingers >= 4;
+        }
+
+        // Manejar gesto de click
+        function handleClickGesture(isClickGesture, x, y) {
+            const currentTime = Date.now();
+
+            if (isClickGesture && !isClicking && (currentTime - lastClickTime) > CLICK_COOLDOWN) {
+                isClicking = true;
+                lastClickTime = currentTime;
+
+                // Efectos visuales
+                virtualCursor.classList.add('clicking');
+                clickStatus.textContent = 'Activo';
+                clickStatus.classList.remove('inactive');
+                clickStatus.classList.add('active');
+
+                // Crear efecto ripple
+                createClickRipple(x, y);
+
+                // Simular click
+                simulateClick(x, y);
+
+                // Resetear después de un tiempo
+                setTimeout(() => {
+                    isClicking = false;
+                    virtualCursor.classList.remove('clicking');
+                    clickStatus.textContent = 'Inactivo';
+                    clickStatus.classList.remove('active');
+                    clickStatus.classList.add('inactive');
+                }, 200);
+            }
+        }
+
+        // Crear efecto ripple
+        function createClickRipple(x, y) {
+            const ripple = document.createElement('div');
+            ripple.classList.add('click-ripple');
+            ripple.style.left = (x - 50) + 'px';
+            ripple.style.top = (y - 50) + 'px';
+            document.body.appendChild(ripple);
+
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        }
+
+        // Simular click en elemento
+        function simulateClick(x, y) {
+            // Obtener elemento en la posición
+            const element = document.elementFromPoint(x, y);
+            
+            if (element && element.tagName === 'BUTTON') {
+                element.click();
+                
+                // Efecto visual en el botón
+                element.classList.add('clicked');
+                setTimeout(() => {
+                    element.classList.remove('clicked');
+                }, 300);
+            }
+        }
+
+        // Dibujar landmarks de la mano
+        function drawHandLandmarks() {
+            if (!currentHandLandmarks) return;
+
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = '#ff0000';
+
+            // Dibujar puntos
+            for (let landmark of currentHandLandmarks) {
+                const x = landmark.x * canvas.width;
+                const y = landmark.y * canvas.height;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            // Dibujar conexiones básicas
+            const connections = [
+                [0, 1], [1, 2], [2, 3], [3, 4], // Pulgar
+                [0, 5], [5, 6], [6, 7], [7, 8], // Índice
+                [5, 9], [9, 10], [10, 11], [11, 12], // Medio
+                [9, 13], [13, 14], [14, 15], [15, 16], // Anular
+                [13, 17], [17, 18], [18, 19], [19, 20], // Meñique
+                [0, 17] // Palma
+            ];
+
+            ctx.beginPath();
+            for (let connection of connections) {
+                const start = currentHandLandmarks[connection[0]];
+                const end = currentHandLandmarks[connection[1]];
+                
+                ctx.moveTo(start.x * canvas.width, start.y * canvas.height);
+                ctx.lineTo(end.x * canvas.width, end.y * canvas.height);
+            }
+            ctx.stroke();
+        }
+
+        // Función de prueba para botones
+        function testClick(buttonName) {
+            console.log(`Click detectado en: ${buttonName}`);
+            alert(`¡Excelente! Click virtual funcionando en ${buttonName}`);
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Manejar redimensionamiento de ventana
+        window.addEventListener('resize', () => {
+            // El cursor se ajusta automáticamente por usar coordenadas relativas
+        });
+    </script>
+</body>
+</html>
