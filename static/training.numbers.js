@@ -497,7 +497,7 @@ function updateSampleCount() {
 	});
 }
 
-// Guardar datos de entrenamiento
+// Guardar datos de entrenamiento con compresión
 async function saveTrainingData() {
 	try {
 		const data = {
@@ -507,21 +507,74 @@ async function saveTrainingData() {
 			timestamp: Date.now()
 		};
 
-		const response = await fetch('/api/training/save', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data)
-		});
+		// Check data size
+		const dataSize = new Blob([JSON.stringify(data)]).size;
+		console.log(`Data size: ${(dataSize / 1024).toFixed(2)}KB`);
 
-		const result = await response.json();
-		
-		if (!result.success) {
-			console.error('Error guardando datos:', result.error);
-			alert('Error al guardar los datos: ' + result.error);
+		if (dataSize > 900 * 1024) { // 900KB limit
+			console.log('Data too large, using compression...');
+			
+			// Use compression utility if available
+			if (window.CompressionUtils) {
+				const result = await window.CompressionUtils.smartSendData('/api/training/save', data);
+				if (!result.success) {
+					console.error('Error guardando datos:', result.error);
+					alert('Error al guardar los datos: ' + result.error);
+				} else {
+					console.log('Datos guardados correctamente con compresión');
+				}
+				return;
+			}
+
+			// Fallback: chunk the data
+			const chunkSize = 50;
+			const chunks = [];
+			for (let i = 0; i < trainingData.length; i += chunkSize) {
+				chunks.push({
+					type: 'numbers',
+					features: trainingData.slice(i, i + chunkSize),
+					labels: trainingLabels.slice(i, i + chunkSize),
+					chunk: Math.floor(i / chunkSize),
+					totalChunks: Math.ceil(trainingData.length / chunkSize),
+					timestamp: Date.now()
+				});
+			}
+
+			for (let chunk of chunks) {
+				const response = await fetch('/api/training/save', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(chunk)
+				});
+
+				const result = await response.json();
+				if (!result.success) {
+					console.error('Error guardando chunk:', result.error);
+					alert('Error al guardar los datos: ' + result.error);
+					return;
+				}
+			}
+			console.log('Datos guardados correctamente en chunks');
 		} else {
-			console.log('Datos guardados correctamente');
+			// Normal request
+			const response = await fetch('/api/training/save', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(data)
+			});
+
+			const result = await response.json();
+			
+			if (!result.success) {
+				console.error('Error guardando datos:', result.error);
+				alert('Error al guardar los datos: ' + result.error);
+			} else {
+				console.log('Datos guardados correctamente');
+			}
 		}
 	} catch (error) {
 		console.error('Error de conexión:', error);
@@ -529,14 +582,35 @@ async function saveTrainingData() {
 	}
 }
 
-// Cargar datos de entrenamiento
+// Cargar datos de entrenamiento con descompresión
 async function loadTrainingData() {
 	try {
 		const response = await fetch('/api/training/load/numbers');
-		const result = await response.json();
+		let result = await response.json();
+
+		// Handle compression if utils are available
+		if (window.CompressionUtils) {
+			result = await window.CompressionUtils.handleResponse({json: () => result});
+		}
 
 		if (result.success) {
-			trainingData = result.features || [];
+			// Decompress features if compressed
+			if (result.compressed && result.features) {
+				if (window.CompressionUtils) {
+					trainingData = await window.CompressionUtils.decompressData(result.features);
+				} else {
+					// Fallback: assume it's base64 encoded JSON
+					try {
+						const decoded = atob(result.features);
+						trainingData = JSON.parse(decoded);
+					} catch (e) {
+						trainingData = result.features;
+					}
+				}
+			} else {
+				trainingData = result.features || [];
+			}
+			
 			trainingLabels = result.labels || [];
 			updateSampleCount();
 		} else {

@@ -1,10 +1,34 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 import pymysql
 import json
+import gzip
+import base64
 from datetime import datetime
 import os
+from flask_compress import Compress
 
 app = Flask(__name__, template_folder="public")
+
+# Configurar compresión
+compress = Compress()
+compress.init_app(app)
+app.config['COMPRESS_MIMETYPES'] = [
+    'text/html', 'text/css', 'text/xml', 'application/json',
+    'application/javascript', 'text/javascript'
+]
+app.config['COMPRESS_LEVEL'] = 6
+app.config['COMPRESS_MIN_SIZE'] = 500
+
+# Headers de optimización
+@app.after_request
+def after_request(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    if 'application/json' in response.content_type:
+        response.headers['Content-Encoding'] = 'gzip'
+        response.headers['Vary'] = 'Accept-Encoding'
+    return response
 
 # Configuración de la base de datos
 DB_CONFIG = {
@@ -96,9 +120,48 @@ def all_numeri():
 
 # APIs para el manejo de datos de entrenamiento
 
+def compress_data(data):
+    """Comprimir datos usando gzip y base64"""
+    try:
+        json_str = json.dumps(data)
+        compressed = gzip.compress(json_str.encode('utf-8'))
+        return base64.b64encode(compressed).decode('utf-8')
+    except Exception as e:
+        print(f"Error comprimiendo datos: {e}")
+        return json.dumps(data)
+
+def decompress_data(compressed_data):
+    """Descomprimir datos de base64 y gzip"""
+    try:
+        if isinstance(compressed_data, str) and compressed_data.startswith('gzip:'):
+            compressed_data = compressed_data[5:]  # Remove 'gzip:' prefix
+            decoded = base64.b64decode(compressed_data)
+            decompressed = gzip.decompress(decoded)
+            return json.loads(decompressed.decode('utf-8'))
+        else:
+            # Si no está comprimido, asumir que es JSON normal
+            return json.loads(compressed_data) if isinstance(compressed_data, str) else compressed_data
+    except Exception as e:
+        print(f"Error descomprimiendo datos: {e}")
+        return compressed_data
+
+def optimize_features(features):
+    """Optimizar features reduciendo precisión decimal"""
+    optimized = []
+    for feature_set in features:
+        optimized_set = []
+        for value in feature_set:
+            if isinstance(value, float):
+                # Reducir precisión a 4 decimales
+                optimized_set.append(round(value, 4))
+            else:
+                optimized_set.append(value)
+        optimized.append(optimized_set)
+    return optimized
+
 @app.route('/api/training/save', methods=['POST'])
 def save_training_data():
-    """Guardar datos de entrenamiento"""
+    """Guardar datos de entrenamiento con compresión"""
     try:
         data = request.get_json()
 
@@ -110,31 +173,41 @@ def save_training_data():
             return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
 
         with connection.cursor() as cursor:
-            # Limpiar datos existentes del tipo especificado
-            cursor.execute("DELETE FROM training_samples WHERE type = %s", (data['type'],))
+            # Si es el primer chunk o no es chunked, limpiar datos existentes
+            if not data.get('isChunked', False) or data.get('chunk', 0) == 0:
+                cursor.execute("DELETE FROM training_samples WHERE type = %s", (data['type'],))
 
-            # Insertar nuevos datos
-            features = data['features']
+            # Optimizar y comprimir features
+            optimized_features = optimize_features(data['features'])
             labels = data['labels']
 
-            for i in range(len(features)):
+            for i in range(len(optimized_features)):
                 if i < len(labels):
+                    # Comprimir features antes de guardar
+                    compressed_features = compress_data(optimized_features[i])
                     cursor.execute("""
                         INSERT INTO training_samples (type, label, features)
                         VALUES (%s, %s, %s)
-                    """, (data['type'], labels[i], json.dumps(features[i])))
+                    """, (data['type'], labels[i], f"gzip:{compressed_features}"))
 
         connection.commit()
         connection.close()
 
-        return jsonify({'success': True, 'message': f'Datos de {data["type"]} guardados correctamente'})
+        chunk_info = ""
+        if data.get('isChunked', False):
+            chunk_info = f" (chunk {data.get('chunk', 0) + 1}/{data.get('totalChunks', 1)})"
+
+        response_data = {'success': True, 'message': f'Datos de {data["type"]} guardados correctamente{chunk_info}'}
+        response = make_response(jsonify(response_data))
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        return response
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/training/load/<training_type>')
 def load_training_data(training_type):
-    """Cargar datos de entrenamiento"""
+    """Cargar datos de entrenamiento con descompresión"""
     try:
         if training_type not in ['alphabet', 'numbers']:
             return jsonify({'success': False, 'error': 'Tipo de entrenamiento inválido'}), 400
@@ -163,14 +236,23 @@ def load_training_data(training_type):
 
         for row in results:
             labels.append(row[0])
-            features.append(json.loads(row[1]))
+            # Descomprimir features si están comprimidas
+            decompressed_features = decompress_data(row[1])
+            features.append(decompressed_features)
 
-        return jsonify({
+        # Comprimir la respuesta completa para envío
+        compressed_response = {
             'success': True,
-            'features': features,
+            'features': compress_data(features),
             'labels': labels,
-            'timestamp': results[0][2].timestamp() * 1000  # Convertir a timestamp JavaScript
-        })
+            'timestamp': results[0][2].timestamp() * 1000,
+            'compressed': True
+        }
+
+        response = make_response(jsonify(compressed_response))
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        response.headers['X-Compression'] = 'gzip'
+        return response
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -254,7 +336,7 @@ def reset_training_data(training_type):
 
 @app.route('/api/model/save', methods=['POST'])
 def save_model():
-    """Guardar modelo entrenado"""
+    """Guardar modelo entrenado con compresión"""
     try:
         data = request.get_json()
 
@@ -266,14 +348,15 @@ def save_model():
             return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
 
         with connection.cursor() as cursor:
-            # Usar INSERT ... ON DUPLICATE KEY UPDATE para manejar actualizaciones
+            # Comprimir modelo antes de guardar
+            compressed_model = compress_data(data['model'])
             cursor.execute("""
                 INSERT INTO trained_models (type, model_data)
                 VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE
                 model_data = VALUES(model_data),
                 updated_at = CURRENT_TIMESTAMP
-            """, (data['type'], json.dumps(data['model'])))
+            """, (data['type'], f"gzip:{compressed_model}"))
 
         connection.commit()
         connection.close()
@@ -285,7 +368,7 @@ def save_model():
 
 @app.route('/api/model/load/<model_type>')
 def load_model(model_type):
-    """Cargar modelo entrenado"""
+    """Cargar modelo entrenado con descompresión"""
     try:
         if model_type not in ['alphabet', 'numbers']:
             return jsonify({'success': False, 'error': 'Tipo de modelo inválido'}), 400
@@ -308,11 +391,19 @@ def load_model(model_type):
         if not result:
             return jsonify({'success': False, 'error': 'Modelo no encontrado'})
 
-        return jsonify({
+        # Descomprimir modelo
+        decompressed_model = decompress_data(result[0])
+
+        response_data = {
             'success': True,
-            'model': json.loads(result[0]),
-            'timestamp': result[1].timestamp() * 1000
-        })
+            'model': compress_data(decompressed_model),
+            'timestamp': result[1].timestamp() * 1000,
+            'compressed': True
+        }
+        response = make_response(jsonify(response_data))
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        response.headers['X-Compression'] = 'gzip'
+        return response
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
