@@ -37,6 +37,23 @@
   gap: 10px;
 }
 
+/* Estilos específicos para el signo igual */
+.equal-item {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+  border-color: #e55039 !important;
+}
+
+.equal-item:hover {
+  background: linear-gradient(135deg, #e55039 0%, #c23616 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(238, 90, 36, 0.4);
+}
+
+.equal-item .operation-symbol {
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .operation-symbol {
@@ -48,7 +65,7 @@
   }
   
   .alphabet-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
@@ -62,6 +79,6 @@
   }
   
   .alphabet-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }

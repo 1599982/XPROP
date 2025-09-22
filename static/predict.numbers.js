@@ -51,7 +51,7 @@ const MIN_WRITE_INTERVAL = 800; // ms mínimo entre escrituras de la misma letra
 
 const ALPHABET = [
 	"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-	"S", "R", "M", "D"
+	"S", "R", "M", "D", "I"
 ];
 
 // Clase Random Forest simplificada (copia de main.js)
@@ -792,18 +792,55 @@ function writeDetectedLetter(letter) {
         'S': '+',
         'R': '-',
         'M': '×',
-        'D': '÷'
+        'D': '÷',
+        'I': '='
     };
     
     const symbol = operationMap[letter] || letter;
-    detectedText += symbol;
+    
+    // Si es el signo igual (I), calcular la expresión
+    if (letter === 'I') {
+        if (detectedText.trim()) {
+            try {
+                // Reemplazar símbolos matemáticos por operadores JavaScript
+                let expression = detectedText.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                // Evaluar la expresión de forma segura
+                const result = Function(`"use strict"; return (${expression})`)();
+                
+                detectedText += symbol + result;
+                console.log(`🧮 Cálculo automático: ${expression} = ${result}`);
+                
+                // Efecto visual especial para resultado
+                if (writeStatusElement) {
+                    writeStatusElement.textContent = `🧮 = ${result}`;
+                    writeStatusElement.classList.remove('ready', 'cooldown');
+                    writeStatusElement.classList.add('ready');
+                }
+            } catch (error) {
+                console.error('Error en cálculo:', error);
+                detectedText += symbol + "Error";
+                
+                if (writeStatusElement) {
+                    writeStatusElement.textContent = `❌ Expresión inválida`;
+                    writeStatusElement.classList.remove('ready', 'cooldown');
+                    writeStatusElement.classList.add('ready');
+                }
+            }
+        } else {
+            detectedText += symbol;
+        }
+    } else {
+        detectedText += symbol;
+    }
+    
     if (detectedTextElement) {
         detectedTextElement.textContent = detectedText;
     }
-    console.log(`Símbolo escrito: ${letter} -> ${symbol} (Expresión: ${detectedText})`);
+    console.log(`Símbolo escrito: ${letter} -> ${symbol} | Expresión completa: "${detectedText}"`);
 
-    // Efecto visual de escritura exitosa
-    if (writeStatusElement) {
+    // Efecto visual de escritura exitosa (para símbolos normales)
+    if (letter !== 'I' && writeStatusElement) {
         writeStatusElement.textContent = `✅ Escrito: ${symbol}`;
         writeStatusElement.classList.remove('ready', 'cooldown');
         writeStatusElement.classList.add('ready');
@@ -812,6 +849,11 @@ function writeDetectedLetter(letter) {
         setTimeout(() => {
             updateWriteStatus();
         }, 600);
+    } else if (letter === 'I') {
+        // Para el signo igual, volver al estado normal después de más tiempo
+        setTimeout(() => {
+            updateWriteStatus();
+        }, 2000);
     }
 }
 

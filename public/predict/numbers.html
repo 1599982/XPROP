@@ -132,6 +132,10 @@
 					<div class="operation-symbol">÷</div>
 					<span>D</span>
 				</div>
+				<div class="letter-item operation-item equal-item" data-letter="I">
+					<img src="{{ url_for('static', filename='images/icons/letters/I.png') }}" alt="I">
+					<span>=</span>
+				</div>
 		    </div>
 		</div>
     </div>
@@ -192,6 +196,30 @@
       
       .operation-item:hover {
         background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      }
+      
+      .equal-item {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+        border-color: #e55039 !important;
+      }
+      
+      .equal-item:hover {
+        background: linear-gradient(135deg, #e55039 0%, #c23616 100%) !important;
+      }
+      
+      .equal-item img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        margin-bottom: 5px;
+        filter: brightness(0) invert(1);
+      }
+      
+      .equal-item span {
+        color: white !important;
+        font-size: 1.2em;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
       }
     </style>
   </body>
