@@ -278,27 +278,29 @@ function startCountdown() {
 			clearInterval(countdownInterval);
 			countdownActive = false;
 			window.countdownActive = false;
-			// Iniciar captura de datos por 5 segundos
+			// Limpiar el canvas y iniciar captura
+			context.clearRect(0, 0, canvas.width, canvas.height);
 			startDataCapture();
 		} else {
-			// Limpiar canvas y redibujar
+			// Redibujar cronómetro
 			drawCountdown(countdown);
 		}
 	}, 1000);
 }
 
-// Dibujar cronómetro superpuesto en el canvas
+// Dibujar cronómetro superpuesto en el canvas con fondo transparente
 function drawCountdown(number) {
-	// Limpiar completamente el canvas primero
-	context.clearRect(0, 0, canvas.width, canvas.height);
-
+	// No limpiar el canvas, mantener el video de fondo
+	
 	// Guardar el estado del canvas
 	context.save();
 
-	// Fondo transparente (removido para hacer el cronómetro transparente)
-
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
+
+	// Fondo semi-transparente solo para el cronómetro
+	context.fillStyle = 'rgba(0, 0, 0, 0.3)';
+	context.fillRect(0, 0, canvas.width, canvas.height);
 
 	// Configurar estilo del número
 	context.fillStyle = '#FFD700';
@@ -317,7 +319,7 @@ function drawCountdown(number) {
 	context.fillText(number.toString(), centerX, centerY);
 	context.strokeText(number.toString(), centerX, centerY);
 
-	// Resetear sombra para el texto adicional
+	// Resetear sombra
 	context.shadowColor = 'transparent';
 	context.shadowBlur = 0;
 	context.shadowOffsetX = 0;
@@ -377,6 +379,8 @@ function updateProgressBar(current, total) {
 // Finalizar captura y entrenar modelo
 function finishCapture(samplesCollected) {
 	console.log(`Captura finalizada. ${samplesCollected} muestras recolectadas para ${selectedLetter}`);
+	
+	// El canvas se limpiará automáticamente con el siguiente frame del video
 
 	// Actualizar contador de muestras
 	updateSampleCount();

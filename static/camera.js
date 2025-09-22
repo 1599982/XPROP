@@ -28,62 +28,130 @@ hands.onResults((results) => {
 		isHandDetected = false;
 	}
 
-	// No dibujar si hay overlays activos
-	if (window.countdownActive || window.isCapturing) {
-		return;
-	}
+	// Siempre dibujar el resultado, similar a predict
+	drawResults(results);
+});
 
+// Dibujar resultados similar a predict/alphabet.html
+function drawResults(results) {
 	context.save();
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
-	// Dibujar imagen de video
+	// Dibujar imagen de video siempre
 	context.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
+	// Si hay cronómetro activo, no dibujar landmarks
+	if (window.countdownActive) {
+		context.restore();
+		return;
+	}
+
 	// Procesar detección de manos para visualización
-	if (isHandDetected) {
-		// Dibujar conexiones de la mano
+	if (isHandDetected && currentHandLandmarks) {
+		// Dibujar conexiones de la mano en color verde (#4caf50)
 		drawConnectors(context, currentHandLandmarks, HAND_CONNECTIONS, {
 			color: "#00ff00",
-			lineWidth: 3
+			lineWidth: 2
 		});
 
-		// Dibujar puntos de referencia
+		// Dibujar puntos de referencia en verde más oscuro
 		drawLandmarks(context, currentHandLandmarks, {
-			color: "#ff0000",
-			lineWidth: 2,
-			radius: 4
+			color: "#00aa00",
+			lineWidth: 1,
+			radius: 3
 		});
+
+		// Etiqueta para la mano (diferente si está capturando)
+		const label = window.isCapturing ? "CAPTURANDO DATOS..." : "MANO DETECTADA";
+		const color = window.isCapturing ? "#ff6b35" : "#00ff00";
+		drawHandLabel(currentHandLandmarks[0], label, color);
+
+		// Indicador visual adicional durante captura
+		if (window.isCapturing) {
+			drawCaptureIndicator();
+		}
 	} else {
 		// Mostrar advertencia cuando no hay mano detectada
-		drawNoHandWarning();
+		drawNoHandMessage();
 	}
 
 	context.restore();
-});
+}
 
-// Mostrar advertencia cuando no se detecta mano
-function drawNoHandWarning() {
+// Dibujar etiqueta de mano similar a predict
+function drawHandLabel(wristLandmark, label, color) {
 	context.save();
 
-	// Fondo transparente
-	context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+	const x = wristLandmark.x * canvas.width;
+	const y = wristLandmark.y * canvas.height - 35;
+
+	// Fondo semi-transparente para la etiqueta
+	context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+	context.fillRect(x - 60, y - 15, 120, 20);
+
+	// Texto de la etiqueta
+	context.fillStyle = color;
+	context.font = 'bold 11px Arial';
+	context.textAlign = 'center';
+	context.fillText(label, x, y - 2);
+
+	context.restore();
+}
+
+// Mostrar mensaje cuando no hay mano detectada (similar a predict)
+function drawNoHandMessage() {
+	context.save();
+
+	// Fondo semi-transparente similar a predict
+	context.fillStyle = 'rgba(0, 0, 0, 0.3)';
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
-	// Texto de advertencia centrado
+	// Texto
 	context.fillStyle = '#ffffff';
-	context.font = 'bold 24px Arial';
+	context.font = 'bold 16px Arial';
 	context.textAlign = 'center';
 	context.textBaseline = 'middle';
 
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
 
-	// Texto principal
-	context.fillText("No se detecta ninguna mano", centerX, centerY - 20);
-
-	// Texto secundario
+	context.fillText('Sistema de Entrenamiento ABC', centerX, centerY - 50);
+	context.font = 'bold 18px Arial';
+	context.fillStyle = '#4caf50';
+	context.fillText('🟢 Coloca tu mano frente a la cámara', centerX, centerY - 25);
+	context.fillStyle = '#ffffff';
 	context.font = 'bold 16px Arial';
-	context.fillText('Asegúrate de que esté bien iluminada', centerX, centerY + 20);
+	context.fillText('• Selecciona una letra para entrenar', centerX, centerY + 10);
+	context.fillText('• Asegúrate de buena iluminación', centerX, centerY + 30);
+
+	context.restore();
+}
+
+// Dibujar indicador de captura activa
+function drawCaptureIndicator() {
+	context.save();
+
+	// Círculo pulsante en la esquina superior derecha
+	const x = canvas.width - 50;
+	const y = 50;
+	const radius = 20;
+
+	// Animación pulsante basada en tiempo
+	const time = Date.now();
+	const pulse = Math.sin(time / 200) * 0.3 + 0.7; // Pulsa entre 0.4 y 1.0
+
+	// Círculo de fondo
+	context.fillStyle = `rgba(255, 107, 53, ${pulse})`;
+	context.beginPath();
+	context.arc(x, y, radius, 0, 2 * Math.PI);
+	context.fill();
+
+	// Texto "REC"
+	context.fillStyle = '#ffffff';
+	context.font = 'bold 12px Arial';
+	context.textAlign = 'center';
+	context.textBaseline = 'middle';
+	context.fillText('REC', x, y);
 
 	context.restore();
 }
