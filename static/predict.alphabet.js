@@ -307,27 +307,28 @@ function initDOMElements() {
 }
 
 // Cargar modelo entrenado desde localStorage
-function loadTrainedModel() {
+async function loadTrainedModel() {
     try {
-        const savedData = localStorage.getItem('signLanguageTrainingData');
-        if (!savedData) {
-            console.warn('No se encontraron datos de entrenamiento');
+        const response = await fetch('/api/training/load/alphabet');
+        const result = await response.json();
+
+        if (!result.success) {
+            console.warn('No se encontraron datos de entrenamiento:', result.error);
             showModelStatus('No hay modelo entrenado', 'warning');
             return;
         }
 
-        const data = JSON.parse(savedData);
-        if (!data.features || !data.labels || data.features.length === 0) {
+        if (!result.features || !result.labels || result.features.length === 0) {
             console.warn('Datos de entrenamiento vacíos o inválidos');
             showModelStatus('Modelo inválido', 'error');
             return;
         }
 
-        console.log(`Cargando modelo con ${data.features.length} muestras`);
+        console.log(`Cargando modelo con ${result.features.length} muestras`);
 
         // Crear y entrenar modelo
         model = new SimpleRandomForest(30);
-        model.fit(data.features, data.labels);
+        model.fit(result.features, result.labels);
 
         console.log('Modelo cargado exitosamente');
         showModelStatus('Modelo cargado', 'success');

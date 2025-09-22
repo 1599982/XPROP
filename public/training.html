@@ -145,33 +145,17 @@
       ];
 
       // Función para calcular el progreso de entrenamiento
-      function updateTrainingProgress() {
+      async function updateTrainingProgress() {
         try {
-          // Leer datos del localStorage
-          const saved = localStorage.getItem('signLanguageTrainingData');
+          const response = await fetch('/api/training/progress');
+          const result = await response.json();
           
           let alphabetProgress = 0;
           let numbersProgress = 0;
           
-          if (saved) {
-            const data = JSON.parse(saved);
-            const labels = data.labels || [];
-            
-            // Contar letras únicas entrenadas
-            const trainedLetters = new Set();
-            const trainedNumbers = new Set();
-            
-            labels.forEach(label => {
-              if (ALPHABET.includes(label)) {
-                trainedLetters.add(label);
-              } else if (NUMBERS.includes(label)) {
-                trainedNumbers.add(label);
-              }
-            });
-            
-            // Calcular porcentajes
-            alphabetProgress = Math.round((trainedLetters.size / ALPHABET.length) * 100);
-            numbersProgress = Math.round((trainedNumbers.size / NUMBERS.length) * 100);
+          if (result.success) {
+            alphabetProgress = result.alphabet.percentage;
+            numbersProgress = result.numbers.percentage;
           }
           
           // Actualizar la UI
@@ -195,6 +179,16 @@
           
         } catch (error) {
           console.error('Error al calcular el progreso de entrenamiento:', error);
+          // En caso de error, mostrar 0%
+          const alphabetPercentageEl = document.getElementById('alphabet-percentage');
+          const alphabetProgressEl = document.getElementById('alphabet-progress');
+          const numbersPercentageEl = document.getElementById('numbers-percentage');
+          const numbersProgressEl = document.getElementById('numbers-progress');
+          
+          if (alphabetPercentageEl) alphabetPercentageEl.textContent = '0%';
+          if (alphabetProgressEl) alphabetProgressEl.style.width = '0%';
+          if (numbersPercentageEl) numbersPercentageEl.textContent = '0%';
+          if (numbersProgressEl) numbersProgressEl.style.width = '0%';
         }
       }
 
@@ -206,12 +200,8 @@
         setInterval(updateTrainingProgress, 5000);
       });
 
-      // Escuchar cambios en localStorage (para actualizaciones en tiempo real)
-      window.addEventListener('storage', function(e) {
-        if (e.key === 'signLanguageTrainingData') {
-          updateTrainingProgress();
-        }
-      });
+      // No necesitamos escuchar localStorage ya que usamos APIs
+      // Las actualizaciones se manejan mediante el intervalo de 5 segundos
     </script>
   </body>
 </html>

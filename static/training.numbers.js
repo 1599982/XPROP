@@ -497,46 +497,111 @@ function updateSampleCount() {
 	});
 }
 
-// Guardar datos de entrenamiento (MISMO localStorage que letras)
-function saveTrainingData() {
-	const data = {
-		features: trainingData,
-		labels: trainingLabels,
-		timestamp: Date.now()
-	};
-	localStorage.setItem('signLanguageTrainingData', JSON.stringify(data));
+// Guardar datos de entrenamiento
+async function saveTrainingData() {
+	try {
+		const data = {
+			type: 'numbers',
+			features: trainingData,
+			labels: trainingLabels,
+			timestamp: Date.now()
+		};
+
+		const response = await fetch('/api/training/save', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data)
+		});
+
+		const result = await response.json();
+		
+		if (!result.success) {
+			console.error('Error guardando datos:', result.error);
+			alert('Error al guardar los datos: ' + result.error);
+		} else {
+			console.log('Datos guardados correctamente');
+		}
+	} catch (error) {
+		console.error('Error de conexión:', error);
+		alert('Error de conexión al servidor');
+	}
 }
 
-// Cargar datos de entrenamiento (MISMO localStorage que letras)
-function loadTrainingData() {
-	const saved = localStorage.getItem('signLanguageTrainingData');
-	if (saved) {
-		const data = JSON.parse(saved);
-		trainingData = data.features || [];
-		trainingLabels = data.labels || [];
+// Cargar datos de entrenamiento
+async function loadTrainingData() {
+	try {
+		const response = await fetch('/api/training/load/numbers');
+		const result = await response.json();
+
+		if (result.success) {
+			trainingData = result.features || [];
+			trainingLabels = result.labels || [];
+			updateSampleCount();
+		} else {
+			console.warn('No se pudieron cargar los datos:', result.error);
+			trainingData = [];
+			trainingLabels = [];
+			updateSampleCount();
+		}
+	} catch (error) {
+		console.error('Error cargando datos:', error);
+		trainingData = [];
+		trainingLabels = [];
 		updateSampleCount();
 	}
 }
 
-// Guardar modelo (MISMO localStorage que letras)
-function saveModel() {
+// Guardar modelo
+async function saveModel() {
 	if (model) {
-		const modelData = {
-			model: model,
-			timestamp: Date.now()
-		};
-		localStorage.setItem('signLanguageModel', JSON.stringify(modelData));
+		try {
+			const modelData = {
+				type: 'numbers',
+				model: model,
+				timestamp: Date.now()
+			};
+
+			const response = await fetch('/api/model/save', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(modelData)
+			});
+
+			const result = await response.json();
+
+			if (!result.success) {
+				console.error('Error guardando modelo:', result.error);
+			} else {
+				console.log('Modelo guardado correctamente');
+			}
+		} catch (error) {
+			console.error('Error de conexión al guardar modelo:', error);
+		}
 	}
 }
 
-// Cargar modelo (MISMO localStorage que letras)
-function loadModel() {
-	const saved = localStorage.getItem('signLanguageModel');
-	if (saved) {
-		const data = JSON.parse(saved);
-		// Nota: La deserialización del modelo requeriría más trabajo
-		// Por ahora solo guardamos la referencia
-		console.log('Modelo guardado encontrado');
+// Cargar modelo
+async function loadModel() {
+	try {
+		const response = await fetch('/api/model/load/numbers');
+		const result = await response.json();
+
+		if (result.success) {
+			// Nota: La deserialización del modelo requeriría más trabajo
+			// Por ahora solo guardamos la referencia
+			console.log('Modelo cargado desde base de datos');
+			return result.model;
+		} else {
+			console.warn('No se pudo cargar el modelo:', result.error);
+			return null;
+		}
+	} catch (error) {
+		console.error('Error cargando modelo:', error);
+		return null;
 	}
 }
 
@@ -552,11 +617,27 @@ window.debugTraining = {
 	trainingData: () => trainingData,
 	trainingLabels: () => trainingLabels,
 	model: () => model,
-	resetData: () => {
-		trainingData = [];
-		trainingLabels = [];
-		localStorage.removeItem('signLanguageTrainingData');
-		updateSampleCount();
+	resetData: async () => {
+		try {
+			const response = await fetch('/api/training/reset/numbers', {
+				method: 'DELETE'
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				trainingData = [];
+				trainingLabels = [];
+				updateSampleCount();
+				console.log('Datos de números eliminados correctamente');
+			} else {
+				console.error('Error eliminando datos:', result.error);
+				alert('Error al eliminar los datos: ' + result.error);
+			}
+		} catch (error) {
+			console.error('Error de conexión:', error);
+			alert('Error de conexión al servidor');
+		}
 	}
 };
 
