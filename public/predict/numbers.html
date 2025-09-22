@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Entrenamiento - Letras</title>
+    <title>Calculadora en Señas</title>
 
     <!-- Fuente Konkhmer Sleokchher -->
     <link
@@ -13,11 +13,12 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/alphabet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/numbers.css') }}">
 
   </head>
   <body>
     <!-- Título -->
-    <h2 class="title">Abecedario en Señas</h2>
+    <h2 class="title">Calculadora en Señas</h2>
 
 <!-- Único cuadro azul -->
 <div class="content-box">
@@ -47,7 +48,7 @@
     <div class="left-section">
       <!-- Detectores -->
       <div class="detectores">
-        <!-- Detector 1: Mano Izquierda - Letras -->
+        <!-- Detector 1: Mano Izquierda - Números -->
         <div class="detector">
           <div class="detector-body">
             <div class="detected-letter" id="detected-letter-left">-</div>
@@ -55,7 +56,7 @@
               <div class="progress" id="letter-progress-left" style="width: 0%;">0%</div>
             </div>
           </div>
-          <div class="detector-footer">Reconocimiento ABC</div>
+          <div class="detector-footer">Reconocimiento Números</div>
         </div>
 
         <!-- Detector 2: Mano Derecha - Control -->
@@ -69,15 +70,68 @@
           <div class="detector-footer">Control de Escritura</div>
         </div>
       </div>
-      <!-- Abecedario -->
+      <!-- Números y Operaciones -->
 		<div class="abecedario-container">
 		    <div class="alphabet-grid" id="alphabet-grid">
-				<template id="letter-content">
-           			<div class="letter-item" data-letter="">
-           				<img src="{{ url_for('static', filename='images/icons/letters/') }}" alt="">
-            			<span></span>
-              		</div>
-             	</template>
+				<!-- Números 0-9 -->
+				<div class="letter-item" data-letter="0">
+					<img src="{{ url_for('static', filename='images/icons/numbers/0.png') }}" alt="0">
+					<span>0</span>
+				</div>
+				<div class="letter-item" data-letter="1">
+					<img src="{{ url_for('static', filename='images/icons/numbers/1.png') }}" alt="1">
+					<span>1</span>
+				</div>
+				<div class="letter-item" data-letter="2">
+					<img src="{{ url_for('static', filename='images/icons/numbers/2.png') }}" alt="2">
+					<span>2</span>
+				</div>
+				<div class="letter-item" data-letter="3">
+					<img src="{{ url_for('static', filename='images/icons/numbers/3.png') }}" alt="3">
+					<span>3</span>
+				</div>
+				<div class="letter-item" data-letter="4">
+					<img src="{{ url_for('static', filename='images/icons/numbers/4.png') }}" alt="4">
+					<span>4</span>
+				</div>
+				<div class="letter-item" data-letter="5">
+					<img src="{{ url_for('static', filename='images/icons/numbers/5.png') }}" alt="5">
+					<span>5</span>
+				</div>
+				<div class="letter-item" data-letter="6">
+					<img src="{{ url_for('static', filename='images/icons/numbers/6.png') }}" alt="6">
+					<span>6</span>
+				</div>
+				<div class="letter-item" data-letter="7">
+					<img src="{{ url_for('static', filename='images/icons/numbers/7.png') }}" alt="7">
+					<span>7</span>
+				</div>
+				<div class="letter-item" data-letter="8">
+					<img src="{{ url_for('static', filename='images/icons/numbers/8.png') }}" alt="8">
+					<span>8</span>
+				</div>
+				<div class="letter-item" data-letter="9">
+					<img src="{{ url_for('static', filename='images/icons/numbers/9.png') }}" alt="9">
+					<span>9</span>
+				</div>
+				
+				<!-- Operaciones Matemáticas -->
+				<div class="letter-item operation-item" data-letter="S">
+					<div class="operation-symbol">+</div>
+					<span>S</span>
+				</div>
+				<div class="letter-item operation-item" data-letter="R">
+					<div class="operation-symbol">-</div>
+					<span>R</span>
+				</div>
+				<div class="letter-item operation-item" data-letter="M">
+					<div class="operation-symbol">×</div>
+					<span>M</span>
+				</div>
+				<div class="letter-item operation-item" data-letter="D">
+					<div class="operation-symbol">÷</div>
+					<span>D</span>
+				</div>
 		    </div>
 		</div>
     </div>
@@ -87,7 +141,7 @@
       <!-- Cuadro de letras detectadas -->
       <div class="detected-text-container">
         <div class="detected-text-header">
-          <span>Texto Detectado</span>
+          <span>Operación Detectada</span>
           <div class="header-controls">
             <span id="write-status" class="write-status">✅ Listo</span>
             <button id="clear-text" class="clear-btn">Limpiar</button>
@@ -113,6 +167,32 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="{{ url_for('static', filename='predict.alphabet.js') }}" type="module"></script>
+    <script src="{{ url_for('static', filename='predict.numbers.js') }}" type="module"></script>
+
+    <style>
+      .operation-item {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #5a67d8;
+      }
+      
+      .operation-symbol {
+        font-size: 2em;
+        font-weight: bold;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        margin-bottom: 5px;
+        line-height: 1;
+      }
+      
+      .operation-item span {
+        font-size: 0.9em;
+        color: white;
+        font-weight: bold;
+      }
+      
+      .operation-item:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      }
+    </style>
   </body>
 </html>
