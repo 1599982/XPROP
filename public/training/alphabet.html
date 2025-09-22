@@ -52,6 +52,11 @@
               </div>
             </div>
 
+            <!-- Progress indicator for chunk saving -->
+            <div id="save-progress" class="save-progress" style="display: none;">
+              Guardando datos...
+            </div>
+
             <!-- Cuadrícula del alfabeto -->
             <div class="alphabet-grid" id="alphabet-grid">
            		<template id="letter-content">
@@ -121,6 +126,29 @@
         .countdown-number {
             font-size: 80px;
         }
+    }
+
+    .save-progress {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        text-align: center;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    .save-progress:contains("Error") {
+        background-color: #f44336;
+        box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
     }
 
     </style>

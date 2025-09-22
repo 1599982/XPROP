@@ -338,7 +338,7 @@ function hideCountdownOverlay() {
 function startDataCapture() {
 	isCapturing = true;
 	window.isCapturing = true;
-	let captureTime = 5000; // 5 segundos
+	let captureTime = 8000; // 5 segundos
 	let captureInterval = 100; // Capturar cada 100ms
 	let samplesCollected = 0;
 	let maxSamples = captureTime / captureInterval;
@@ -421,7 +421,7 @@ function finishCapture(samplesCollected) {
 // Resetear estado inicial
 function resetToInitialState() {
 	console.log('🔄 Reseteando estado inicial');
-	
+
 	// Resetear barra de progreso
 	const progressFill = document.getElementById('progress-fill');
 	const progressText = document.getElementById('progress-text');
@@ -505,32 +505,81 @@ function updateSampleCount() {
 // Guardar datos de entrenamiento
 async function saveTrainingData() {
 	try {
-		const data = {
-			type: 'alphabet',
-			features: trainingData,
-			labels: trainingLabels,
-			timestamp: Date.now()
+		if (!trainingData.length || !trainingLabels.length) {
+			alert('No hay datos para guardar');
+			return;
+		}
+
+		console.log(`📊 Preparando para enviar ${trainingData.length} muestras de entrenamiento...`);
+
+		// Calcular tamaño óptimo de chunk
+		const chunkSize = Utils.calculateOptimalChunkSize(trainingData, 500);
+		console.log(`📦 Tamaño de chunk calculado: ${chunkSize} muestras por chunk`);
+
+		// Validar datos antes del chunking
+		const validation = Utils.validateChunkingData(trainingData, trainingLabels, chunkSize);
+
+		if (!validation.isValid) {
+			console.error('❌ Error en validación de datos:', validation.errors);
+			alert('Error en los datos: ' + validation.errors.join(', '));
+			return;
+		}
+
+		if (validation.warnings.length > 0) {
+			console.warn('⚠️ Advertencias:', validation.warnings);
+		}
+
+		console.log(`ℹ️ Se crearán ${validation.info.totalChunks} chunks, tiempo estimado: ${validation.info.estimatedTimeSeconds.toFixed(1)}s`);
+
+		// Función de progreso personalizada
+		const progressCallback = (progress) => {
+			const { chunkIndex, totalChunks, percentage, completed, total } = progress;
+
+			console.log(`📤 Enviando chunk ${completed}/${total} (${percentage}%) - Alfabeto`);
+
+			// Actualizar interfaz si existe un elemento de progreso
+			const progressElement = document.getElementById('save-progress');
+			if (progressElement) {
+				progressElement.style.display = 'block';
+				progressElement.innerHTML = `Guardando datos: ${percentage}% (${completed}/${total} chunks)`;
+			}
+
+			if (completed === total) {
+				console.log('✅ ¡Todos los datos del alfabeto guardados correctamente!');
+				if (progressElement) {
+					progressElement.innerHTML = '✅ Datos guardados correctamente';
+					setTimeout(() => {
+						progressElement.style.display = 'none';
+					}, 3000);
+				}
+			}
 		};
 
-		const response = await fetch('/api/training/save', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data)
-		});
+		// Enviar datos por chunks
+		const success = await Utils.sendTrainingDataInChunks(
+			'alphabet',
+			trainingData,
+			trainingLabels,
+			chunkSize,
+			progressCallback
+		);
 
-		const result = await response.json();
-		
-		if (!result.success) {
-			console.error('Error guardando datos:', result.error);
-			alert('Error al guardar los datos: ' + result.error);
-		} else {
-			console.log('Datos guardados correctamente');
+		if (success) {
+			console.log('🎉 Proceso de guardado completado exitosamente');
 		}
+
 	} catch (error) {
-		console.error('Error de conexión:', error);
-		alert('Error de conexión al servidor');
+		console.error('💥 Error durante el guardado por chunks:', error);
+		alert('Error al guardar los datos: ' + error.message);
+
+		// Ocultar indicador de progreso en caso de error
+		const progressElement = document.getElementById('save-progress');
+		if (progressElement) {
+			progressElement.innerHTML = '❌ Error al guardar datos';
+			setTimeout(() => {
+				progressElement.style.display = 'none';
+			}, 5000);
+		}
 	}
 }
 

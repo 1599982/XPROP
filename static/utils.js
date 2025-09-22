@@ -310,3 +310,222 @@ export function smoothFeatures(featuresHistory, windowSize = 5) {
 
     return smoothed;
 }
+
+/**
+ * Divide los datos de entrenamiento en chunks más pequeños
+ * @param {Array} features - Array de características
+ * @param {Array} labels - Array de etiquetas
+ * @param {number} chunkSize - Tamaño de cada chunk (por defecto 100)
+ * @returns {Array} - Array de chunks con {features, labels, chunkIndex, totalChunks}
+ */
+export function createDataChunks(features, labels, chunkSize = 100) {
+    if (!features || !labels || features.length !== labels.length) {
+        throw new Error('Features y labels deben tener la misma longitud');
+    }
+
+    const chunks = [];
+    const totalItems = features.length;
+    const totalChunks = Math.ceil(totalItems / chunkSize);
+
+    for (let i = 0; i < totalItems; i += chunkSize) {
+        const chunkFeatures = features.slice(i, i + chunkSize);
+        const chunkLabels = labels.slice(i, i + chunkSize);
+        
+        chunks.push({
+            features: chunkFeatures,
+            labels: chunkLabels,
+            chunkIndex: Math.floor(i / chunkSize),
+            totalChunks: totalChunks,
+            startIndex: i,
+            endIndex: Math.min(i + chunkSize - 1, totalItems - 1)
+        });
+    }
+
+    return chunks;
+}
+
+/**
+ * Envía datos de entrenamiento por chunks con seguimiento de progreso
+ * @param {string} type - Tipo de entrenamiento ('alphabet' o 'numbers')
+ * @param {Array} features - Array de características
+ * @param {Array} labels - Array de etiquetas
+ * @param {number} chunkSize - Tamaño de cada chunk
+ * @param {Function} progressCallback - Función de callback para el progreso
+ * @returns {Promise<boolean>} - True si todos los chunks se enviaron correctamente
+ */
+export async function sendTrainingDataInChunks(type, features, labels, chunkSize = 100, progressCallback = null) {
+    try {
+        // Primero limpiar datos existentes
+        const clearResponse = await fetch(`/api/training/clear/${type}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!clearResponse.ok) {
+            throw new Error('Error al limpiar datos existentes');
+        }
+
+        const chunks = createDataChunks(features, labels, chunkSize);
+        let successfulChunks = 0;
+
+        for (const chunk of chunks) {
+            const data = {
+                type: type,
+                features: chunk.features,
+                labels: chunk.labels,
+                chunkIndex: chunk.chunkIndex,
+                totalChunks: chunk.totalChunks,
+                isFirstChunk: chunk.chunkIndex === 0,
+                isLastChunk: chunk.chunkIndex === chunk.totalChunks - 1,
+                timestamp: Date.now()
+            };
+
+            const response = await fetch('/api/training/save-chunk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                console.error(`Error en chunk ${chunk.chunkIndex}:`, result.error);
+                throw new Error(`Error en chunk ${chunk.chunkIndex}: ${result.error}`);
+            }
+
+            successfulChunks++;
+
+            // Callback de progreso
+            if (progressCallback) {
+                progressCallback({
+                    chunkIndex: chunk.chunkIndex,
+                    totalChunks: chunk.totalChunks,
+                    percentage: Math.round((successfulChunks / chunk.totalChunks) * 100),
+                    completed: successfulChunks,
+                    total: chunk.totalChunks
+                });
+            }
+
+            // Pequeña pausa entre chunks para no sobrecargar el servidor
+            await sleep(50);
+        }
+
+        console.log(`✓ Todos los ${chunks.length} chunks enviados correctamente`);
+        return true;
+
+    } catch (error) {
+        console.error('Error enviando datos por chunks:', error);
+        throw error;
+    }
+}
+
+/**
+ * Función auxiliar para pausar la ejecución
+ * @param {number} ms - Milisegundos a pausar
+ * @returns {Promise}
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Calcula el tamaño óptimo de chunk basado en el tamaño de los datos
+ * @param {Array} features - Array de características
+ * @param {number} maxSizeKB - Tamaño máximo por chunk en KB (por defecto 500KB)
+ * @returns {number} - Tamaño óptimo de chunk
+ */
+export function calculateOptimalChunkSize(features, maxSizeKB = 500) {
+    if (!features || features.length === 0) return 100;
+
+    // Estimar el tamaño de una muestra en bytes
+    const sampleSize = JSON.stringify({
+        features: features[0] || [],
+        label: 'A'
+    }).length;
+
+    // Calcular cuántas muestras caben en el límite de tamaño
+    const maxSizeBytes = maxSizeKB * 1024;
+    const optimalSize = Math.floor(maxSizeBytes / sampleSize);
+
+    // Asegurar que esté dentro de rangos razonables
+    return Math.max(10, Math.min(500, optimalSize));
+}
+
+/**
+ * Monitorea el progreso de envío de chunks y muestra información en consola
+ * @param {Object} progress - Objeto con información del progreso
+ */
+export function defaultProgressCallback(progress) {
+    const { chunkIndex, totalChunks, percentage, completed, total } = progress;
+    
+    console.log(`📦 Chunk ${chunkIndex + 1}/${totalChunks} enviado (${percentage}% completado)`);
+    
+    if (completed === total) {
+        console.log('🎉 ¡Todos los chunks enviados correctamente!');
+    }
+}
+
+/**
+ * Valida que los chunks se puedan crear correctamente
+ * @param {Array} features - Array de características
+ * @param {Array} labels - Array de etiquetas
+ * @param {number} chunkSize - Tamaño de chunk propuesto
+ * @returns {Object} - Información de validación
+ */
+export function validateChunkingData(features, labels, chunkSize) {
+    const validation = {
+        isValid: true,
+        errors: [],
+        warnings: [],
+        info: {}
+    };
+
+    // Validaciones básicas
+    if (!features || !Array.isArray(features)) {
+        validation.isValid = false;
+        validation.errors.push('Features debe ser un array válido');
+    }
+
+    if (!labels || !Array.isArray(labels)) {
+        validation.isValid = false;
+        validation.errors.push('Labels debe ser un array válido');
+    }
+
+    if (features.length !== labels.length) {
+        validation.isValid = false;
+        validation.errors.push('Features y labels deben tener la misma longitud');
+    }
+
+    if (chunkSize <= 0) {
+        validation.isValid = false;
+        validation.errors.push('El tamaño de chunk debe ser mayor a 0');
+    }
+
+    // Información adicional
+    if (validation.isValid) {
+        const totalChunks = Math.ceil(features.length / chunkSize);
+        const estimatedTime = totalChunks * 0.1; // ~100ms por chunk
+
+        validation.info = {
+            totalSamples: features.length,
+            chunkSize: chunkSize,
+            totalChunks: totalChunks,
+            estimatedTimeSeconds: estimatedTime
+        };
+
+        // Advertencias
+        if (totalChunks > 50) {
+            validation.warnings.push(`Se crearán ${totalChunks} chunks, esto puede tomar un tiempo considerable`);
+        }
+
+        if (chunkSize > 1000) {
+            validation.warnings.push('Chunk size muy grande, podría causar timeouts en el servidor');
+        }
+    }
+
+    return validation;
+}

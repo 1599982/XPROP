@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Sistema de Chunking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section h3 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .test-button:hover {
+            background: #45a049;
+        }
+
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            padding: 3px;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            background-color: #4CAF50;
+            height: 20px;
+            border-radius: 7px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .warning {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <h2 class="title">Pruebas del Sistema de Chunking</h2>
+
+    <div class="test-container">
+        <!-- Navegación -->
+        <div class="test-section">
+            <button onclick="window.location.href='/'" class="test-button">🏠 Inicio</button>
+            <button onclick="window.location.href='/allenamiento/alfabeto'" class="test-button">📝 Entrenamiento Alfabeto</button>
+            <button onclick="window.location.href='/allenamiento/numeri'" class="test-button">🔢 Entrenamiento Números</button>
+        </div>
+
+        <!-- Controles de prueba -->
+        <div class="test-section">
+            <h3>🧪 Controles de Prueba</h3>
+            
+            <button id="run-all-tests" class="test-button">🚀 Ejecutar Todas las Pruebas</button>
+            <button id="test-chunk-creation" class="test-button">📦 Prueba Creación de Chunks</button>
+            <button id="test-optimal-size" class="test-button">📏 Prueba Tamaño Óptimo</button>
+            <button id="test-validation" class="test-button">✅ Prueba Validación</button>
+            <button id="test-progress" class="test-button">📈 Prueba Progreso</button>
+            <button id="test-simulated-send" class="test-button">📤 Prueba Envío Simulado</button>
+            <button id="clear-console" class="test-button" style="background: #f44336;">🗑️ Limpiar Consola</button>
+        </div>
+
+        <!-- Configuración de prueba -->
+        <div class="test-section">
+            <h3>⚙️ Configuración de Prueba</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <label for="sample-count">Número de Muestras:</label>
+                    <input type="number" id="sample-count" value="500" min="10" max="5000" style="width: 100%; padding: 8px; margin-top: 5px;">
+                </div>
+                <div>
+                    <label for="chunk-size">Tamaño de Chunk:</label>
+                    <input type="number" id="chunk-size" value="100" min="1" max="1000" style="width: 100%; padding: 8px; margin-top: 5px;">
+                </div>
+                <div>
+                    <label for="max-size-kb">Tamaño Máximo (KB):</label>
+                    <input type="number" id="max-size-kb" value="500" min="50" max="5000" style="width: 100%; padding: 8px; margin-top: 5px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Progreso -->
+        <div class="test-section">
+            <h3>📊 Progreso de Pruebas</h3>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div id="progress-text">Listo para ejecutar pruebas</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="tests-passed">0</div>
+                    <div class="stat-label">Pruebas Pasadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="tests-failed">0</div>
+                    <div class="stat-label">Pruebas Fallidas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="tests-total">0</div>
+                    <div class="stat-label">Total Ejecutadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="success-rate">0%</div>
+                    <div class="stat-label">Tasa de Éxito</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consola de output -->
+        <div class="test-section">
+            <h3>📺 Consola de Salida</h3>
+            <div id="console-output" class="console-output">
+Bienvenido al sistema de pruebas de chunking.
+Haz clic en cualquier botón para comenzar las pruebas.
+
+💡 Consejos:
+- "Ejecutar Todas las Pruebas" ejecuta la suite completa
+- Las pruebas individuales te permiten enfocarte en aspectos específicos
+- Ajusta la configuración arriba para probar diferentes escenarios
+            </div>
+        </div>
+
+        <!-- Información del sistema -->
+        <div class="test-section">
+            <h3>ℹ️ Información del Sistema</h3>
+            <div id="system-info">
+                <p><strong>Navegador:</strong> <span id="browser-info"></span></p>
+                <p><strong>Memoria Disponible:</strong> <span id="memory-info"></span></p>
+                <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as TestChunking from "{{ url_for('static', filename='test-chunking.js') }}";
+
+        // Referencias a elementos DOM
+        const consoleOutput = document.getElementById('console-output');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const testsPassedElement = document.getElementById('tests-passed');
+        const testsFailedElement = document.getElementById('tests-failed');
+        const testsTotalElement = document.getElementById('tests-total');
+        const successRateElement = document.getElementById('success-rate');
+
+        // Estado de las pruebas
+        let testResults = {
+            passed: 0,
+            failed: 0,
+            total: 0
+        };
+
+        // Función para agregar texto a la consola
+        function addToConsole(text, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            consoleOutput.textContent += `[${timestamp}] ${prefix} ${text}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Función para actualizar progreso
+        function updateProgress(percentage, text) {
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = text;
+        }
+
+        // Función para actualizar estadísticas
+        function updateStats() {
+            testsPassedElement.textContent = testResults.passed;
+            testsFailedElement.textContent = testResults.failed;
+            testsTotalElement.textContent = testResults.total;
+            
+            if (testResults.total > 0) {
+                const successRate = ((testResults.passed / testResults.total) * 100).toFixed(1);
+                successRateElement.textContent = `${successRate}%`;
+                
+                // Cambiar color basado en la tasa de éxito
+                if (successRate >= 80) {
+                    successRateElement.style.color = '#4CAF50';
+                } else if (successRate >= 60) {
+                    successRateElement.style.color = '#ff9800';
+                } else {
+                    successRateElement.style.color = '#f44336';
+                }
+            }
+        }
+
+        // Función para deshabilitar/habilitar botones
+        function setButtonsDisabled(disabled) {
+            const buttons = document.querySelectorAll('.test-button:not(#clear-console)');
+            buttons.forEach(button => {
+                button.disabled = disabled;
+            });
+        }
+
+        // Override console methods para capturar salida
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'info');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warning');
+        };
+
+        // Event listeners
+        document.getElementById('run-all-tests').addEventListener('click', async () => {
+            setButtonsDisabled(true);
+            updateProgress(0, 'Ejecutando todas las pruebas...');
+            
+            try {
+                const results = await TestChunking.runAllTests();
+                testResults = results;
+                updateStats();
+                updateProgress(100, 'Todas las pruebas completadas');
+                addToConsole(`Pruebas completadas: ${results.passed}/${results.total} exitosas`, 'success');
+            } catch (error) {
+                addToConsole(`Error ejecutando pruebas: ${error.message}`, 'error');
+            } finally {
+                setButtonsDisabled(false);
+            }
+        });
+
+        document.getElementById('test-chunk-creation').addEventListener('click', async () => {
+            setButtonsDisabled(true);
+            try {
+                const result = await TestChunking.testChunkCreation();
+                updateTestResult(result);
+            } finally {
+                setButtonsDisabled(false);
+            }
+        });
+
+        document.getElementById('test-optimal-size').addEventListener('click', async () => {
+            setButtonsDisabled(true);
+            try {
+                const result = await TestChunking.testOptimalChunkSize();
+                updateTestResult(result);
+            } finally {
+                setButtonsDisabled(false);
+            }
+        });
+
+        document.getElementById('test-validation').addEventListener('click', async () => {
+            setButtonsDisabled(true);
+            try {
+                const result = await TestChunking.testValidation();
+                updateTestResult(result);
+            } finally {
+                setButtonsDisabled(false);
+            }
+        });
+
+        document.getElementById('test-progress').addEventListener('click', async () => {
+            setButtonsDisabled(true);
+            try {
+                const result = await TestChunking.testProgressCallback();
+                updateTestResult(result);
+            } finally {
+                setButtonsDisabled(false);
+            }
+        });
+
+        document.getElementById('test-simulated-send').addEventListener('click', async () => {
+            setButtonsDisabled(true);
+            try {
+                const result = await TestChunking.testSimulatedSend();
+                updateTestResult(result);
+            } finally {
+                setButtonsDisabled(false);
+            }
+        });
+
+        document.getElementById('clear-console').addEventListener('click', () => {
+            consoleOutput.textContent = 'Consola limpiada.\n';
+            testResults = { passed: 0, failed: 0, total: 0 };
+            updateStats();
+            updateProgress(0, 'Listo para ejecutar pruebas');
+        });
+
+        function updateTestResult(result) {
+            if (result) {
+                testResults.passed++;
+            } else {
+                testResults.failed++;
+            }
+            testResults.total++;
+            updateStats();
+        }
+
+        // Información del sistema
+        function updateSystemInfo() {
+            document.getElementById('browser-info').textContent = navigator.userAgent.split('(')[0];
+            
+            if (navigator.deviceMemory) {
+                document.getElementById('memory-info').textContent = `${navigator.deviceMemory} GB`;
+            } else {
+                document.getElementById('memory-info').textContent = 'No disponible';
+            }
+            
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        }
+
+        // Inicialización
+        updateSystemInfo();
+        addToConsole('Sistema de pruebas de chunking inicializado', 'success');
+        addToConsole('Listo para ejecutar pruebas. ¡Comencemos!', 'info');
+    </script>
+</body>
+</html>

@@ -96,11 +96,15 @@ def all_alfabeto():
 def all_numeri():
     return render_template("training/numbers.html")
 
+@app.route('/test/chunking')
+def test_chunking():
+    return render_template("test-chunking.html")
+
 # APIs para el manejo de datos de entrenamiento
 
 @app.route('/api/training/save', methods=['POST'])
 def save_training_data():
-    """Guardar datos de entrenamiento"""
+    """Guardar datos de entrenamiento (método original - mantener compatibilidad)"""
     try:
         data = request.get_json()
 
@@ -130,6 +134,69 @@ def save_training_data():
         connection.close()
 
         return jsonify({'success': True, 'message': f'Datos de {data["type"]} guardados correctamente'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/training/save-chunk', methods=['POST'])
+def save_training_data_chunk():
+    """Guardar chunk de datos de entrenamiento"""
+    try:
+        data = request.get_json()
+
+        required_fields = ['features', 'labels', 'type', 'chunkIndex', 'totalChunks']
+        if not data or not all(field in data for field in required_fields):
+            return jsonify({'success': False, 'error': 'Datos incompletos'}), 400
+
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        with connection.cursor() as cursor:
+            # Insertar datos del chunk
+            features = data['features']
+            labels = data['labels']
+            chunk_index = data['chunkIndex']
+            total_chunks = data['totalChunks']
+
+            for i in range(len(features)):
+                if i < len(labels):
+                    cursor.execute("""
+                        INSERT INTO training_samples (type, label, features)
+                        VALUES (%s, %s, %s)
+                    """, (data['type'], labels[i], json.dumps(features[i])))
+
+        connection.commit()
+        connection.close()
+
+        return jsonify({
+            'success': True,
+            'message': f'Chunk {chunk_index + 1}/{total_chunks} de {data["type"]} guardado correctamente',
+            'chunkIndex': chunk_index,
+            'totalChunks': total_chunks
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/training/clear/<training_type>', methods=['DELETE'])
+def clear_training_data(training_type):
+    """Limpiar datos de entrenamiento de un tipo específico"""
+    try:
+        if training_type not in ['alphabet', 'numbers']:
+            return jsonify({'success': False, 'error': 'Tipo de entrenamiento inválido'}), 400
+
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM training_samples WHERE type = %s", (training_type,))
+
+        connection.commit()
+        connection.close()
+
+        return jsonify({'success': True, 'message': f'Datos de {training_type} limpiados correctamente'})
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
