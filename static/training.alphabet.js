@@ -503,17 +503,12 @@ function updateSampleCount() {
 }
 
 async function sendTrainingDataInChunks(data, chunkSize = 25) {
-  // Limpiar datos existentes antes del primer chunk
-  await fetch(`/api/training/clear-before-save/${data.type}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" }
-  });
-
   for (let i = 0; i < data.features.length; i += chunkSize) {
     const chunk = {
       type: data.type,
       features: data.features.slice(i, i + chunkSize),
-      labels: data.labels.slice(i, i + chunkSize)
+      labels: data.labels.slice(i, i + chunkSize),
+      clear_first: i === 0  // Solo limpiar en el primer chunk
     };
 
     await fetch("/api/training/save", {

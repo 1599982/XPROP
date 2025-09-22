@@ -100,7 +100,7 @@ def all_numeri():
 
 @app.route('/api/training/save', methods=['POST'])
 def save_training_data():
-    """Guardar datos de entrenamiento"""
+    """Guardar datos de entrenamiento (método original - mantener compatibilidad)"""
     try:
         data = request.get_json()
 
@@ -112,8 +112,14 @@ def save_training_data():
             return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
 
         with connection.cursor() as cursor:
-            # Limpiar datos existentes del tipo especificado
-            cursor.execute("DELETE FROM training_samples WHERE type = %s", (data['type'],))
+            # Solo limpiar si es el primer chunk o si viene el parámetro clear_first
+            if data.get('clear_first', False):
+                cursor.execute("DELETE FROM training_samples WHERE type = %s", (data['type'],))
+                # Resetear AUTO_INCREMENT si la tabla está vacía
+                cursor.execute("SELECT COUNT(*) FROM training_samples")
+                total_count = cursor.fetchone()[0]
+                if total_count == 0:
+                    cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
 
             # Insertar nuevos datos
             features = data['features']
