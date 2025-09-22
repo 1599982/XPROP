@@ -6,6 +6,8 @@ import os
 
 app = Flask(__name__, template_folder="public")
 
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 50 MB
+
 # Configuración de la base de datos
 DB_CONFIG = {
     'host': '161.132.54.35',
