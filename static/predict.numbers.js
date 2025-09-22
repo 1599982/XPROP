@@ -269,10 +269,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Inicializar cámara
     await initCamera();
 
+    // Generar alfabeto
+    generateAlphabet();
+
+    // Inicializar disponibilidad de operaciones
+    updateOperationAvailability();
+
     // Iniciar detección
     startDetection();
 
-    console.log('Sistema de predicción iniciado');
+    console.log('Sistema iniciado correctamente');
 });
 
 // Obtener elementos DOM
@@ -775,18 +781,74 @@ function checkAndWriteLetter() {
             // Permitir escribir si es una letra diferente o ha pasado suficiente tiempo
             if (smoothedLeftLetter !== lastWrittenLetter ||
                 (currentTime - lastWriteTime) > MIN_WRITE_INTERVAL) {
-                writeDetectedLetter(smoothedLeftLetter);
-                lastWrittenLetter = smoothedLeftLetter;
-                lastWriteTime = currentTime;
+                
+                // Validar antes de escribir
+                const validation = isValidOperation(smoothedLeftLetter, detectedText);
+                if (validation.valid) {
+                    writeDetectedLetter(smoothedLeftLetter);
+                    lastWrittenLetter = smoothedLeftLetter;
+                    lastWriteTime = currentTime;
+                } else {
+                    console.warn(`⚠️ Operación no válida impedida: ${validation.message}`);
+                    showOperationTips();
+                }
             }
         }
     }
 
     // Actualizar indicador de estado de escritura
     updateWriteStatus();
+    updateOperationAvailability();
 }
 
 // Escribir letra detectada en el cuadro de texto
+function isValidOperation(letter, currentText) {
+    const operationMap = {
+        'S': '+',
+        'R': '-',
+        'M': '×',
+        'D': '÷',
+        'I': '='
+    };
+    
+    const symbol = operationMap[letter] || letter;
+    const operations = ['+', '-', '×', '÷', '='];
+    const lastChar = currentText.slice(-1);
+    
+    // Si es un número, siempre es válido
+    if (!operations.includes(symbol)) {
+        return { valid: true, message: '' };
+    }
+    
+    // Si es una operación
+    if (operations.includes(symbol)) {
+        // No permitir operación al inicio (excepto -)
+        if (currentText.length === 0 && symbol !== '-') {
+            return { valid: false, message: 'No se puede iniciar con una operación' };
+        }
+        
+        // No permitir dos operaciones consecutivas
+        if (operations.includes(lastChar)) {
+            return { valid: false, message: 'No se pueden tener dos operaciones consecutivas' };
+        }
+        
+        // No permitir múltiples signos igual
+        if (symbol === '=' && currentText.includes('=')) {
+            return { valid: false, message: 'Ya hay un signo igual en la expresión' };
+        }
+        
+        // Si es signo igual, debe haber al menos una operación antes
+        if (symbol === '=') {
+            const hasOperation = ['+', '-', '×', '÷'].some(op => currentText.includes(op));
+            if (!hasOperation) {
+                return { valid: false, message: 'Debe haber una operación antes del signo igual' };
+            }
+        }
+    }
+    
+    return { valid: true, message: '' };
+}
+
 function writeDetectedLetter(letter) {
     // Mapear operaciones a símbolos matemáticos
     const operationMap = {
@@ -799,15 +861,51 @@ function writeDetectedLetter(letter) {
     
     const symbol = operationMap[letter] || letter;
     
+    // Validar si la operación es permitida
+    const validation = isValidOperation(letter, detectedText);
+    if (!validation.valid) {
+        console.warn(`❌ Operación no válida: ${validation.message}`);
+        
+        if (writeStatusElement) {
+            writeStatusElement.textContent = `❌ ${validation.message}`;
+            writeStatusElement.classList.remove('ready', 'cooldown');
+            writeStatusElement.classList.add('error');
+            
+            // Visual feedback in detected text box
+            if (detectedTextElement && detectedTextElement.parentElement) {
+                detectedTextElement.parentElement.classList.add('error');
+                setTimeout(() => {
+                    detectedTextElement.parentElement.classList.remove('error');
+                }, 1000);
+            }
+            
+            setTimeout(() => {
+                writeStatusElement.classList.remove('error');
+                updateWriteStatus();
+                showOperationTips();
+            }, 2000);
+        }
+        return;
+    }
+    
     // Si es el signo igual (I), calcular la expresión
     if (letter === 'I') {
         if (detectedText.trim()) {
             try {
-                // Reemplazar símbolos matemáticos por operadores JavaScript
+                // Validar que la expresión sea válida antes de calcular
                 let expression = detectedText.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                // Validar sintaxis básica
+                if (!/^[-]?[\d\.\+\-\*\/\(\)\s]+$/.test(expression)) {
+                    throw new Error('Expresión contiene caracteres inválidos');
+                }
                 
                 // Evaluar la expresión de forma segura
                 const result = Function(`"use strict"; return (${expression})`)();
+                
+                if (!isFinite(result)) {
+                    throw new Error('Resultado no es un número válido');
+                }
                 
                 detectedText += symbol + result;
                 console.log(`🧮 Cálculo automático: ${expression} = ${result}`);
@@ -817,18 +915,40 @@ function writeDetectedLetter(letter) {
                     writeStatusElement.textContent = `🧮 = ${result}`;
                     writeStatusElement.classList.remove('ready', 'cooldown');
                     writeStatusElement.classList.add('ready');
+                    
+                    // Visual feedback for successful calculation
+                    if (detectedTextElement && detectedTextElement.parentElement) {
+                        detectedTextElement.parentElement.classList.add('calculated');
+                        setTimeout(() => {
+                            detectedTextElement.parentElement.classList.remove('calculated');
+                        }, 2000);
+                    }
                 }
             } catch (error) {
                 console.error('Error en cálculo:', error);
                 detectedText += symbol + "Error";
                 
                 if (writeStatusElement) {
-                    writeStatusElement.textContent = `❌ Expresión inválida`;
+                    writeStatusElement.textContent = `❌ Error: ${error.message}`;
                     writeStatusElement.classList.remove('ready', 'cooldown');
-                    writeStatusElement.classList.add('ready');
+                    writeStatusElement.classList.add('error');
+                    
+                    // Visual feedback for calculation error
+                    if (detectedTextElement && detectedTextElement.parentElement) {
+                        detectedTextElement.parentElement.classList.add('error');
+                        setTimeout(() => {
+                            detectedTextElement.parentElement.classList.remove('error');
+                        }, 1000);
+                    }
+                    
+                    setTimeout(() => {
+                        writeStatusElement.classList.remove('error');
+                        updateWriteStatus();
+                    }, 3000);
                 }
             }
         } else {
+            // Si no hay texto, solo agregar el símbolo
             detectedText += symbol;
         }
     } else {
@@ -840,10 +960,13 @@ function writeDetectedLetter(letter) {
     }
     console.log(`Símbolo escrito: ${letter} -> ${symbol} | Expresión completa: "${detectedText}"`);
 
+    // Actualizar disponibilidad de operaciones
+    updateOperationAvailability();
+
     // Efecto visual de escritura exitosa (para símbolos normales)
     if (letter !== 'I' && writeStatusElement) {
         writeStatusElement.textContent = `✅ Escrito: ${symbol}`;
-        writeStatusElement.classList.remove('ready', 'cooldown');
+        writeStatusElement.classList.remove('ready', 'cooldown', 'error');
         writeStatusElement.classList.add('ready');
 
         // Volver al estado normal después de un momento
@@ -863,11 +986,36 @@ function clearDetectedText() {
     detectedText = "";
     lastWrittenLetter = null;
     lastWriteTime = 0;
+    
     if (detectedTextElement) {
         detectedTextElement.textContent = "";
     }
-    console.log('Texto limpiado');
+    
+    // Limpiar cualquier estado de error
+    if (writeStatusElement) {
+        writeStatusElement.classList.remove('ready', 'cooldown', 'error');
+        writeStatusElement.classList.add('ready');
+    }
+    
+    // Limpiar estados visuales del cuadro de texto
+    if (detectedTextElement && detectedTextElement.parentElement) {
+        detectedTextElement.parentElement.classList.remove('error', 'success', 'calculated');
+    }
+    
+    console.log('✅ Calculadora limpiada - Lista para nueva operación');
     updateWriteStatus();
+    updateOperationAvailability();
+    showOperationTips();
+    
+    // Mostrar mensaje temporal de confirmación
+    if (writeStatusElement) {
+        const originalText = writeStatusElement.textContent;
+        writeStatusElement.textContent = '🗑️ Calculadora limpiada';
+        
+        setTimeout(() => {
+            updateWriteStatus();
+        }, 1500);
+    }
 }
 
 // Resetear detección cuando no hay manos
@@ -979,6 +1127,55 @@ function generateAlphabet() {
     // La función ya no es necesaria porque los números y operaciones están hardcodeados en el HTML
     console.log(`Números y operaciones cargados: ${ALPHABET.length} elementos`);
     console.log('Elementos disponibles:', ALPHABET.join(', '));
+}
+
+// Add visual feedback for operations
+function updateOperationAvailability() {
+    const operations = ['S', 'R', 'M', 'D', 'I'];
+    const operationElements = document.querySelectorAll('.letter-item');
+    
+    operationElements.forEach(element => {
+        const letter = element.getAttribute('data-letter');
+        if (operations.includes(letter)) {
+            const validation = isValidOperation(letter, detectedText);
+            if (validation.valid) {
+                element.classList.remove('disabled');
+                element.title = '';
+            } else {
+                element.classList.add('disabled');
+                element.title = `❌ ${validation.message}`;
+            }
+        } else {
+            // Numbers are always valid
+            element.classList.remove('disabled');
+            element.title = '';
+        }
+    });
+}
+
+// Show helpful tips based on current state
+function showOperationTips() {
+    if (!detectedText) {
+        console.log('💡 Consejo: Comienza escribiendo un número para iniciar tu operación');
+        return;
+    }
+    
+    const lastChar = detectedText.slice(-1);
+    const operations = ['+', '-', '×', '÷', '='];
+    
+    if (operations.includes(lastChar)) {
+        if (lastChar === '=') {
+            console.log('💡 Consejo: La operación está completa. Usa "Limpiar" para comenzar una nueva');
+        } else {
+            console.log('💡 Consejo: Ahora escribe un número para continuar la operación');
+        }
+    } else {
+        if (detectedText.includes('=')) {
+            console.log('💡 Consejo: Operación completada. Puedes limpiar para empezar de nuevo');
+        } else {
+            console.log('💡 Consejo: Puedes agregar una operación (+, -, ×, ÷) o calcular (=)');
+        }
+    }
 }
 
 // Actualizar iluminación del alfabeto basado en detección

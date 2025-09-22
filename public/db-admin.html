@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Base de Datos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .admin-section.warning {
+            border-left-color: #ff9800;
+        }
+
+        .admin-section.danger {
+            border-left-color: #f44336;
+        }
+
+        .admin-section h3 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .admin-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #e68900;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #d32f2f;
+        }
+
+        .btn-info {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-info:hover:not(:disabled) {
+            background: #1976D2;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .stat-card.warning {
+            border-left-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .stat-card.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+
+        .success { color: #4CAF50; }
+        .warning { color: #ff9800; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+
+        .nav-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav-section button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h2 class="title">Administración de Base de Datos</h2>
+
+    <div class="admin-container">
+        <!-- Navegación -->
+        <div class="nav-section">
+            <h3>🧭 Navegación</h3>
+            <button onclick="window.location.href='/'" class="admin-button btn-info">🏠 Inicio</button>
+            <button onclick="window.location.href='/allenamiento/alfabeto'" class="admin-button btn-info">📝 Alfabeto</button>
+            <button onclick="window.location.href='/allenamento/numeri'" class="admin-button btn-info">🔢 Números</button>
+            <button onclick="window.location.href='/test/chunking'" class="admin-button btn-info">🧪 Test Chunking</button>
+        </div>
+
+        <!-- Diagnósticos -->
+        <div class="admin-section">
+            <h3>🔍 Diagnósticos de Base de Datos</h3>
+            <p>Verificar el estado actual de las tablas y detectar problemas con IDs.</p>
+            
+            <div class="button-group">
+                <button id="btn-diagnostics" class="admin-button btn-primary">
+                    📊 Ejecutar Diagnósticos
+                </button>
+                <button id="btn-refresh" class="admin-button btn-info">
+                    🔄 Actualizar
+                </button>
+            </div>
+
+            <div id="diagnostics-results" class="stats-grid" style="display: none;">
+                <!-- Los resultados se llenarán dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Mantenimiento -->
+        <div class="admin-section warning">
+            <h3>🛠️ Herramientas de Mantenimiento</h3>
+            <p>Funciones para optimizar y reparar la base de datos.</p>
+            
+            <div class="button-group">
+                <button id="btn-reset-ids" class="admin-button btn-warning">
+                    🔧 Resetear AUTO_INCREMENT
+                </button>
+                <button id="btn-optimize" class="admin-button btn-warning">
+                    ⚡ Optimizar IDs Secuenciales
+                </button>
+            </div>
+        </div>
+
+        <!-- Operaciones Peligrosas -->
+        <div class="admin-section danger">
+            <h3>⚠️ Operaciones Peligrosas</h3>
+            <p><strong>¡CUIDADO!</strong> Estas operaciones eliminarán datos permanentemente.</p>
+            
+            <div class="button-group">
+                <button id="btn-clear-alphabet" class="admin-button btn-danger">
+                    🗑️ Limpiar Alfabeto
+                </button>
+                <button id="btn-clear-numbers" class="admin-button btn-danger">
+                    🗑️ Limpiar Números
+                </button>
+                <button id="btn-reset-all" class="admin-button btn-danger">
+                    💣 Resetear TODO
+                </button>
+            </div>
+
+            <label>
+                <input type="checkbox" id="confirm-dangerous"> 
+                Confirmo que entiendo las consecuencias de estas operaciones
+            </label>
+        </div>
+
+        <!-- Información Detallada -->
+        <div class="admin-section">
+            <h3>📋 Información Detallada</h3>
+            
+            <div class="button-group">
+                <button id="btn-count-alphabet" class="admin-button btn-info">
+                    📊 Conteo Alfabeto
+                </button>
+                <button id="btn-count-numbers" class="admin-button btn-info">
+                    📊 Conteo Números
+                </button>
+                <button id="btn-training-progress" class="admin-button btn-info">
+                    📈 Progreso Entrenamiento
+                </button>
+            </div>
+
+            <div id="detailed-info" class="table-container" style="display: none;">
+                <!-- Información detallada se mostrará aquí -->
+            </div>
+        </div>
+
+        <!-- Consola de Output -->
+        <div class="admin-section">
+            <h3>💻 Consola de Salida</h3>
+            <button id="btn-clear-console" class="admin-button btn-warning">🗑️ Limpiar Consola</button>
+            
+            <div id="console-output" class="console-output">
+Bienvenido al panel de administración de base de datos.
+Usa los botones de arriba para ejecutar operaciones de diagnóstico y mantenimiento.
+
+🟢 Sistema listo para operaciones.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Referencias a elementos DOM
+        const consoleOutput = document.getElementById('console-output');
+        const diagnosticsResults = document.getElementById('diagnostics-results');
+        const detailedInfo = document.getElementById('detailed-info');
+        const confirmCheckbox = document.getElementById('confirm-dangerous');
+
+        // Función para agregar texto a la consola
+        function addToConsole(text, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            const icon = icons[type] || icons.info;
+            const className = type;
+            
+            consoleOutput.innerHTML += `<span class="${className}">[${timestamp}] ${icon} ${text}</span>\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Función para hacer peticiones API
+        async function apiRequest(url, method = 'GET') {
+            try {
+                const response = await fetch(url, { method });
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                throw new Error(`Error de conexión: ${error.message}`);
+            }
+        }
+
+        // Función para deshabilitar temporalmente un botón
+        function disableButtonTemporarily(button, duration = 2000) {
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="loading"></span> Procesando...';
+            
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }, duration);
+        }
+
+        // Event Listeners
+        document.getElementById('btn-diagnostics').addEventListener('click', async () => {
+            const button = document.getElementById('btn-diagnostics');
+            disableButtonTemporarily(button, 3000);
+            
+            addToConsole('Ejecutando diagnósticos de base de datos...', 'info');
+            
+            try {
+                const result = await apiRequest('/api/training/diagnostics');
+                
+                if (result.success) {
+                    addToConsole('✓ Diagnósticos completados exitosamente', 'success');
+                    displayDiagnostics(result);
+                } else {
+                    addToConsole(`Error en diagnósticos: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`Error: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('btn-reset-ids').addEventListener('click', async () => {
+            const button = document.getElementById('btn-reset-ids');
+            disableButtonTemporarily(button);
+            
+            addToConsole('Reseteando AUTO_INCREMENT...', 'info');
+            
+            try {
+                const result = await apiRequest('/api/training/reset-ids', 'POST');
+                
+                if (result.success) {
+                    addToConsole('✓ AUTO_INCREMENT reseteado correctamente', 'success');
+                } else {
+                    addToConsole(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`Error: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('btn-optimize').addEventListener('click', async () => {
+            const button = document.getElementById('btn-optimize');
+            disableButtonTemporarily(button, 5000);
+            
+            addToConsole('Optimizando tabla y reorganizando IDs...', 'info');
+            
+            try {
+                const result = await apiRequest('/api/training/optimize', 'POST');
+                
+                if (result.success) {
+                    addToConsole('✓ Tabla optimizada correctamente', 'success');
+                    addToConsole(`Registros totales: ${result.stats.total_records}`, 'info');
+                    addToConsole(`Rango de IDs: ${result.stats.new_min_id} - ${result.stats.new_max_id}`, 'info');
+                    addToConsole(`IDs secuenciales: ${result.stats.ids_are_sequential ? 'Sí' : 'No'}`, result.stats.ids_are_sequential ? 'success' : 'warning');
+                } else {
+                    addToConsole(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Operaciones peligrosas
+        ['btn-clear-alphabet', 'btn-clear-numbers', 'btn-reset-all'].forEach(btnId => {
+            document.getElementById(btnId).addEventListener('click', async () => {
+                if (!confirmCheckbox.checked) {
+                    addToConsole('⚠️ Debes confirmar que entiendes las consecuencias', 'warning');
+                    return;
+                }
+
+                const button = document.getElementById(btnId);
+                const action = btnId.replace('btn-', '').replace('-', '/');
+                
+                const confirmMsg = btnId === 'btn-reset-all' ? 
+                    '¿Estás SEGURO de que quieres eliminar TODOS los datos?' :
+                    '¿Confirmas que quieres eliminar estos datos?';
+
+                if (!confirm(confirmMsg)) {
+                    addToConsole('Operación cancelada por el usuario', 'info');
+                    return;
+                }
+
+                disableButtonTemporarily(button);
+                addToConsole(`Ejecutando ${action}...`, 'warning');
+
+                try {
+                    let url;
+                    if (btnId === 'btn-clear-alphabet') url = '/api/training/reset/alphabet';
+                    else if (btnId === 'btn-clear-numbers') url = '/api/training/reset/numbers';
+                    else if (btnId === 'btn-reset-all') url = '/api/training/reset/all';
+
+                    const result = await apiRequest(url, 'DELETE');
+                    
+                    if (result.success) {
+                        addToConsole('✓ Operación completada', 'success');
+                        confirmCheckbox.checked = false;
+                    } else {
+                        addToConsole(`Error: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    addToConsole(`Error: ${error.message}`, 'error');
+                }
+            });
+        });
+
+        // Información detallada
+        ['btn-count-alphabet', 'btn-count-numbers', 'btn-training-progress'].forEach(btnId => {
+            document.getElementById(btnId).addEventListener('click', async () => {
+                const button = document.getElementById(btnId);
+                disableButtonTemporarily(button);
+
+                try {
+                    let url;
+                    if (btnId === 'btn-count-alphabet') url = '/api/training/count/alphabet';
+                    else if (btnId === 'btn-count-numbers') url = '/api/training/count/numbers';
+                    else if (btnId === 'btn-training-progress') url = '/api/training/progress';
+
+                    const result = await apiRequest(url);
+                    
+                    if (result.success) {
+                        displayDetailedInfo(result, btnId);
+                        addToConsole('✓ Información cargada', 'success');
+                    } else {
+                        addToConsole(`Error: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    addToConsole(`Error: ${error.message}`, 'error');
+                }
+            });
+        });
+
+        document.getElementById('btn-clear-console').addEventListener('click', () => {
+            consoleOutput.innerHTML = 'Consola limpiada.\n';
+        });
+
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            location.reload();
+        });
+
+        // Función para mostrar diagnósticos
+        function displayDiagnostics(data) {
+            const container = diagnosticsResults;
+            container.style.display = 'grid';
+            
+            const training = data.training_samples;
+            const models = data.trained_models;
+            const analysis = data.id_analysis;
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${training.total_records}</div>
+                    <div class="stat-label">Muestras Totales</div>
+                </div>
+                <div class="stat-card ${training.min_id !== 1 ? 'warning' : ''}">
+                    <div class="stat-value">${training.min_id || 'N/A'} - ${training.max_id || 'N/A'}</div>
+                    <div class="stat-label">Rango de IDs</div>
+                </div>
+                <div class="stat-card ${analysis.has_gaps ? 'error' : ''}">
+                    <div class="stat-value">${analysis.has_gaps ? 'SÍ' : 'NO'}</div>
+                    <div class="stat-label">Tiene Gaps en IDs</div>
+                </div>
+                <div class="stat-card ${analysis.expected_next_id !== analysis.actual_next_auto_increment ? 'warning' : ''}">
+                    <div class="stat-value">${analysis.actual_next_auto_increment}</div>
+                    <div class="stat-label">Próximo AUTO_INCREMENT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${models.total_records}</div>
+                    <div class="stat-label">Modelos Guardados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${training.by_type.length}</div>
+                    <div class="stat-label">Tipos de Datos</div>
+                </div>
+            `;
+        }
+
+        // Función para mostrar información detallada
+        function displayDetailedInfo(data, type) {
+            const container = detailedInfo;
+            container.style.display = 'block';
+            
+            if (type === 'btn-training-progress') {
+                container.innerHTML = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Entrenadas</th>
+                                <th>Total</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Alfabeto</td>
+                                <td>${data.alphabet.trained}</td>
+                                <td>${data.alphabet.total}</td>
+                                <td>${data.alphabet.percentage}%</td>
+                            </tr>
+                            <tr>
+                                <td>Números</td>
+                                <td>${data.numbers.trained}</td>
+                                <td>${data.numbers.total}</td>
+                                <td>${data.numbers.percentage}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                // Para conteos individuales
+                const rows = data.by_label.map(item => 
+                    `<tr><td>${item.label}</td><td>${item.count}</td></tr>`
+                ).join('');
+                
+                container.innerHTML = `
+                    <h4>Total: ${data.total_samples} muestras</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Etiqueta</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                `;
+            }
+        }
+
+        // Ejecutar diagnósticos al cargar la página
+        window.addEventListener('load', () => {
+            addToConsole('Panel de administración cargado correctamente', 'success');
+            addToConsole('Tip: Ejecuta diagnósticos para ver el estado actual', 'info');
+        });
+    </script>
+</body>
+</html>

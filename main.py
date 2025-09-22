@@ -100,6 +100,10 @@ def all_numeri():
 def test_chunking():
     return render_template("test-chunking.html")
 
+@app.route('/admin/database')
+def db_admin():
+    return render_template("db-admin.html")
+
 @app.route('/api/training/count/<training_type>')
 def get_training_count(training_type):
     """Obtener conteo de datos de entrenamiento para debugging"""
@@ -232,6 +236,12 @@ def clear_training_data(training_type):
         with connection.cursor() as cursor:
             cursor.execute("DELETE FROM training_samples WHERE type = %s", (training_type,))
 
+            # Resetear AUTO_INCREMENT si la tabla está vacía
+            cursor.execute("SELECT COUNT(*) FROM training_samples")
+            total_count = cursor.fetchone()[0]
+            if total_count == 0:
+                cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
+
         connection.commit()
         connection.close()
 
@@ -254,10 +264,171 @@ def clear_before_save(training_type):
         with connection.cursor() as cursor:
             cursor.execute("DELETE FROM training_samples WHERE type = %s", (training_type,))
 
+            # Resetear AUTO_INCREMENT si la tabla está vacía
+            cursor.execute("SELECT COUNT(*) FROM training_samples")
+            total_count = cursor.fetchone()[0]
+            if total_count == 0:
+                cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
+
         connection.commit()
         connection.close()
 
         return jsonify({'success': True, 'message': f'Datos de {training_type} limpiados, listo para nuevos chunks'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/training/reset-ids', methods=['POST'])
+def reset_auto_increment():
+    """Resetear AUTO_INCREMENT de las tablas para que los IDs empiecen desde 1"""
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        with connection.cursor() as cursor:
+            # Resetear AUTO_INCREMENT de ambas tablas
+            cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
+            cursor.execute("ALTER TABLE trained_models AUTO_INCREMENT = 1")
+
+        connection.commit()
+        connection.close()
+
+        return jsonify({'success': True, 'message': 'AUTO_INCREMENT reseteado para ambas tablas'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/training/optimize', methods=['POST'])
+def optimize_table_ids():
+    """Reorganizar IDs de la tabla para que sean secuenciales desde 1"""
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        with connection.cursor() as cursor:
+            # Crear tabla temporal con estructura idéntica
+            cursor.execute("""
+                CREATE TEMPORARY TABLE temp_training_samples
+                SELECT * FROM training_samples ORDER BY created_at, type, label
+            """)
+
+            # Limpiar tabla original
+            cursor.execute("DELETE FROM training_samples")
+            cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
+
+            # Copiar datos de vuelta con nuevos IDs secuenciales
+            cursor.execute("""
+                INSERT INTO training_samples (type, label, features, created_at)
+                SELECT type, label, features, created_at
+                FROM temp_training_samples
+                ORDER BY created_at, type, label
+            """)
+
+            # Obtener estadísticas después de la optimización
+            cursor.execute("SELECT COUNT(*) as total, MIN(id) as min_id, MAX(id) as max_id FROM training_samples")
+            stats = cursor.fetchone()
+
+            # Limpiar tabla temporal
+            cursor.execute("DROP TEMPORARY TABLE temp_training_samples")
+
+        connection.commit()
+        connection.close()
+
+        return jsonify({
+            'success': True,
+            'message': 'Tabla optimizada correctamente',
+            'stats': {
+                'total_records': stats[0],
+                'new_min_id': stats[1],
+                'new_max_id': stats[2],
+                'ids_are_sequential': stats[0] == (stats[2] - stats[1] + 1) if stats[0] > 0 else True
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/training/diagnostics')
+def database_diagnostics():
+    """Obtener información de diagnóstico de la base de datos"""
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        diagnostics = {}
+
+        with connection.cursor() as cursor:
+            # Estado de la tabla training_samples
+            cursor.execute("""
+                SELECT
+                    MIN(id) as min_id,
+                    MAX(id) as max_id,
+                    COUNT(*) as total_records
+                FROM training_samples
+            """)
+            training_stats = cursor.fetchone()
+
+            cursor.execute("SHOW TABLE STATUS LIKE 'training_samples'")
+            training_table_info = cursor.fetchone()
+
+            # Estado de la tabla trained_models
+            cursor.execute("""
+                SELECT
+                    MIN(id) as min_id,
+                    MAX(id) as max_id,
+                    COUNT(*) as total_records
+                FROM trained_models
+            """)
+            models_stats = cursor.fetchone()
+
+            cursor.execute("SHOW TABLE STATUS LIKE 'trained_models'")
+            models_table_info = cursor.fetchone()
+
+            # Conteos por tipo
+            cursor.execute("""
+                SELECT type, COUNT(*) as count, MIN(id) as min_id, MAX(id) as max_id
+                FROM training_samples
+                GROUP BY type
+            """)
+            type_stats = cursor.fetchall()
+
+            # Verificar gaps en IDs
+            cursor.execute("""
+                SELECT id FROM training_samples ORDER BY id
+            """)
+            all_ids = [row[0] for row in cursor.fetchall()]
+
+        connection.close()
+
+        # Construir respuesta de diagnóstico
+        diagnostics = {
+            'success': True,
+            'training_samples': {
+                'total_records': training_stats[2],
+                'min_id': training_stats[0],
+                'max_id': training_stats[1],
+                'next_auto_increment': training_table_info[10],
+                'by_type': [{'type': row[0], 'count': row[1], 'min_id': row[2], 'max_id': row[3]}
+                           for row in type_stats]
+            },
+            'trained_models': {
+                'total_records': models_stats[2],
+                'min_id': models_stats[0],
+                'max_id': models_stats[1],
+                'next_auto_increment': models_table_info[10]
+            },
+            'id_analysis': {
+                'total_ids': len(all_ids),
+                'has_gaps': len(all_ids) > 0 and (max(all_ids) - min(all_ids) + 1) != len(all_ids) if all_ids else False,
+                'expected_next_id': max(all_ids) + 1 if all_ids else 1,
+                'actual_next_auto_increment': training_table_info[10]
+            }
+        }
+
+        return jsonify(diagnostics)
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -370,9 +541,23 @@ def reset_training_data(training_type):
             if training_type == 'all':
                 cursor.execute("DELETE FROM training_samples")
                 cursor.execute("DELETE FROM trained_models")
+                # Resetear AUTO_INCREMENT para ambas tablas
+                cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
+                cursor.execute("ALTER TABLE trained_models AUTO_INCREMENT = 1")
             else:
                 cursor.execute("DELETE FROM training_samples WHERE type = %s", (training_type,))
                 cursor.execute("DELETE FROM trained_models WHERE type = %s", (training_type,))
+
+                # Resetear AUTO_INCREMENT si las tablas están vacías
+                cursor.execute("SELECT COUNT(*) FROM training_samples")
+                training_count = cursor.fetchone()[0]
+                if training_count == 0:
+                    cursor.execute("ALTER TABLE training_samples AUTO_INCREMENT = 1")
+
+                cursor.execute("SELECT COUNT(*) FROM trained_models")
+                models_count = cursor.fetchone()[0]
+                if models_count == 0:
+                    cursor.execute("ALTER TABLE trained_models AUTO_INCREMENT = 1")
 
         connection.commit()
         connection.close()

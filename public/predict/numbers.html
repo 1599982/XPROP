@@ -222,6 +222,74 @@
         font-weight: bold;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
       }
+
+      /* Error states for write status */
+      .write-status.error {
+        background-color: #ff4757 !important;
+        color: white !important;
+        animation: shake 0.5s ease-in-out;
+      }
+
+      .write-status.warning {
+        background-color: #ffa502 !important;
+        color: white !important;
+        animation: pulse 1s infinite;
+      }
+
+      /* Animations for feedback */
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+
+      /* Visual feedback for invalid operations */
+      .detected-text-box.error {
+        border: 2px solid #ff4757 !important;
+        background-color: #ffe6e6 !important;
+        animation: shake 0.5s ease-in-out;
+      }
+
+      .detected-text-box.success {
+        border: 2px solid #2ed573 !important;
+        background-color: #e6ffe6 !important;
+        animation: flash-green 0.5s ease-in-out;
+      }
+
+      @keyframes flash-green {
+        0%, 100% { background-color: white; }
+        50% { background-color: #e6ffe6; }
+      }
+
+      /* Disabled state for operation items when invalid */
+      .letter-item.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        filter: grayscale(70%);
+        transform: none !important;
+      }
+
+      .letter-item.disabled:hover {
+        transform: none !important;
+        background: initial !important;
+      }
+
+      /* Success feedback for calculations */
+      .detected-text-box.calculated {
+        background: linear-gradient(135deg, #e6ffe6 0%, #ccffcc 100%);
+        border: 2px solid #2ed573;
+        animation: glow-success 1s ease-in-out;
+      }
+
+      @keyframes glow-success {
+        0%, 100% { box-shadow: 0 0 5px rgba(46, 213, 115, 0.3); }
+        50% { box-shadow: 0 0 20px rgba(46, 213, 115, 0.8); }
+      }
     </style>
   </body>
 </html>
