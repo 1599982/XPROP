@@ -22,5 +22,9 @@ def prv_numeri():
 def all_alfabeto():
 		return render_template("training/alphabet.html")
 
+@app.route('/allenamiento/numeri')
+def all_numeri():
+	return render_template("training/numbers.html")
+
 if __name__ == "__main__":
 	app.run("localhost", 5000, debug=True)
