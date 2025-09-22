@@ -8,6 +8,7 @@ let rightHandLandmarks = null;
 let isLeftHandDetected = false;
 let isRightHandDetected = false;
 let model = null;
+let alphabetModel = null;
 
 // Template elements
 let letterGrid;
@@ -302,33 +303,44 @@ function initDOMElements() {
 // Cargar modelo entrenado desde localStorage
 async function loadTrainedModel() {
     try {
-        const response = await fetch('/api/training/load/numbers');
-        const result = await response.json();
+        // Cargar modelo de números
+        const numbersResponse = await fetch('/api/training/load/numbers');
+        const numbersResult = await numbersResponse.json();
 
-        if (!result.success) {
-            console.warn('No se encontraron datos de entrenamiento:', result.error);
-            showModelStatus('No hay modelo entrenado', 'warning');
-            return;
+        if (numbersResult.success && numbersResult.features && numbersResult.labels && numbersResult.features.length > 0) {
+            model = new SimpleRandomForest(30);
+            model.fit(numbersResult.features, numbersResult.labels);
+            console.log(`Modelo de números cargado con ${numbersResult.features.length} muestras`);
+        } else {
+            console.warn('No se encontraron datos de entrenamiento de números');
         }
 
-        if (!result.features || !result.labels || result.features.length === 0) {
-            console.warn('Datos de entrenamiento vacíos o inválidos');
-            showModelStatus('Modelo inválido', 'error');
-            return;
+        // Cargar modelo de alfabeto para operaciones
+        const alphabetResponse = await fetch('/api/training/load/alphabet');
+        const alphabetResult = await alphabetResponse.json();
+
+        if (alphabetResult.success && alphabetResult.features && alphabetResult.labels && alphabetResult.features.length > 0) {
+            alphabetModel = new SimpleRandomForest(30);
+            alphabetModel.fit(alphabetResult.features, alphabetResult.labels);
+            console.log(`Modelo de alfabeto cargado con ${alphabetResult.features.length} muestras`);
+        } else {
+            console.warn('No se encontraron datos de entrenamiento de alfabeto');
         }
 
-        console.log(`Cargando modelo con ${result.features.length} muestras`);
-
-        // Crear y entrenar modelo
-        model = new SimpleRandomForest(30);
-        model.fit(result.features, result.labels);
-
-        console.log('Modelo cargado exitosamente');
-        showModelStatus('Modelo cargado', 'success');
+        if (model && alphabetModel) {
+            showModelStatus('Modelos cargados', 'success');
+            console.log('Ambos modelos cargados exitosamente');
+        } else if (model || alphabetModel) {
+            showModelStatus('Modelo parcial', 'warning');
+            console.warn('Solo un modelo cargado');
+        } else {
+            showModelStatus('Sin modelos', 'error');
+            console.error('No se pudo cargar ningún modelo');
+        }
 
     } catch (error) {
-        console.error('Error cargando modelo:', error);
-        showModelStatus('Error cargando modelo', 'error');
+        console.error('Error cargando modelos:', error);
+        showModelStatus('Error cargando modelos', 'error');
     }
 }
 
@@ -552,22 +564,54 @@ function detectLetterFromLeftHand() {
     const features = Utils.extractHandFeatures(leftHandLandmarks);
     if (!features) return;
 
-    // Predecir letra
-    const predictions = model.predict([features]);
-    const letterPrediction = predictions[0];
+    let bestPrediction = null;
+    let bestConfidence = 0;
 
-    // Calcular confianza de la letra (0-100)
-    leftHandLetterConfidence = Math.round(letterPrediction.confidence * 100);
-    lastDetectedLetterLeft = letterPrediction.prediction;
+    // Primero intentar con el modelo de números
+    if (model) {
+        const predictions = model.predict([features]);
+        const letterPrediction = predictions[0];
+        
+        // Si es un número válido (0-9)
+        if (letterPrediction && /^[0-9]$/.test(letterPrediction.prediction)) {
+            const confidence = Math.round(letterPrediction.confidence * 100);
+            if (confidence > bestConfidence) {
+                bestPrediction = letterPrediction.prediction;
+                bestConfidence = confidence;
+            }
+        }
+    }
 
-    // Actualizar historial para suavizado
-    leftHandLetterHistory.push(lastDetectedLetterLeft);
-    leftHandConfidenceHistory.push(leftHandLetterConfidence);
+    // Intentar con el modelo de alfabeto para operaciones
+    if (alphabetModel) {
+        const predictions = alphabetModel.predict([features]);
+        const letterPrediction = predictions[0];
+        
+        // Solo aceptar letras que son operaciones válidas (S, R, M, D, I)
+        const validOperations = ['S', 'R', 'M', 'D', 'I'];
+        if (letterPrediction && validOperations.includes(letterPrediction.prediction)) {
+            const confidence = Math.round(letterPrediction.confidence * 100);
+            if (confidence > bestConfidence) {
+                bestPrediction = letterPrediction.prediction;
+                bestConfidence = confidence;
+            }
+        }
+    }
 
-    // Mantener tamaño máximo del historial
-    if (leftHandLetterHistory.length > HISTORY_SIZE) {
-        leftHandLetterHistory.shift();
-        leftHandConfidenceHistory.shift();
+    // Usar la mejor predicción encontrada
+    if (bestPrediction) {
+        leftHandLetterConfidence = bestConfidence;
+        lastDetectedLetterLeft = bestPrediction;
+
+        // Actualizar historial para suavizado
+        leftHandLetterHistory.push(lastDetectedLetterLeft);
+        leftHandConfidenceHistory.push(leftHandLetterConfidence);
+
+        // Limitar historial
+        if (leftHandLetterHistory.length > HISTORY_SIZE) {
+            leftHandLetterHistory.shift();
+            leftHandConfidenceHistory.shift();
+        }
     }
 }
 
