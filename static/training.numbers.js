@@ -497,84 +497,43 @@ function updateSampleCount() {
 	});
 }
 
+async function sendTrainingDataInChunks(data, chunkSize = 50) {
+  for (let i = 0; i < data.features.length; i += chunkSize) {
+    const chunk = {
+      type: data.type,
+      features: data.features.slice(i, i + chunkSize),
+      labels: data.labels.slice(i, i + chunkSize)
+    };
+
+    const response = await fetch("/api/training/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chunk)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en chunk: ${response.status} ${response.statusText}`);
+    }
+  }
+}
+
 // Guardar datos de entrenamiento
 async function saveTrainingData() {
 	try {
-		if (!trainingData.length || !trainingLabels.length) {
-			alert('No hay datos para guardar');
-			return;
-		}
-
-		console.log(`📊 Preparando para enviar ${trainingData.length} muestras de entrenamiento de números...`);
-
-		// Calcular tamaño óptimo de chunk
-		const chunkSize = Utils.calculateOptimalChunkSize(trainingData, 500);
-		console.log(`📦 Tamaño de chunk calculado: ${chunkSize} muestras por chunk`);
-
-		// Validar datos antes del chunking
-		const validation = Utils.validateChunkingData(trainingData, trainingLabels, chunkSize);
-		
-		if (!validation.isValid) {
-			console.error('❌ Error en validación de datos:', validation.errors);
-			alert('Error en los datos: ' + validation.errors.join(', '));
-			return;
-		}
-
-		if (validation.warnings.length > 0) {
-			console.warn('⚠️ Advertencias:', validation.warnings);
-		}
-
-		console.log(`ℹ️ Se crearán ${validation.info.totalChunks} chunks, tiempo estimado: ${validation.info.estimatedTimeSeconds.toFixed(1)}s`);
-
-		// Función de progreso personalizada
-		const progressCallback = (progress) => {
-			const { chunkIndex, totalChunks, percentage, completed, total } = progress;
-			
-			console.log(`📤 Enviando chunk ${completed}/${total} (${percentage}%) - Números`);
-			
-			// Actualizar interfaz si existe un elemento de progreso
-			const progressElement = document.getElementById('save-progress');
-			if (progressElement) {
-				progressElement.style.display = 'block';
-				progressElement.innerHTML = `Guardando datos: ${percentage}% (${completed}/${total} chunks)`;
-			}
-
-			if (completed === total) {
-				console.log('✅ ¡Todos los datos de números guardados correctamente!');
-				if (progressElement) {
-					progressElement.innerHTML = '✅ Datos guardados correctamente';
-					setTimeout(() => {
-						progressElement.style.display = 'none';
-					}, 3000);
-				}
-			}
+		const data = {
+			type: 'numbers',
+			features: trainingData,
+			labels: trainingLabels,
+			timestamp: Date.now()
 		};
 
-		// Enviar datos por chunks
-		const success = await Utils.sendTrainingDataInChunks(
-			'numbers',
-			trainingData,
-			trainingLabels,
-			chunkSize,
-			progressCallback
-		);
+		const chunkSize = Math.ceil(data.features.length / 10);
+		await sendTrainingDataInChunks(data, chunkSize);
 
-		if (success) {
-			console.log('🎉 Proceso de guardado completado exitosamente');
-		}
-
+		console.log('Datos guardados correctamente');
 	} catch (error) {
-		console.error('💥 Error durante el guardado por chunks:', error);
-		alert('Error al guardar los datos: ' + error.message);
-		
-		// Ocultar indicador de progreso en caso de error
-		const progressElement = document.getElementById('save-progress');
-		if (progressElement) {
-			progressElement.innerHTML = '❌ Error al guardar datos';
-			setTimeout(() => {
-				progressElement.style.display = 'none';
-			}, 5000);
-		}
+		console.error('Error de conexión:', error);
+		alert('Error de conexión al servidor: ' + error.message);
 	}
 }
 

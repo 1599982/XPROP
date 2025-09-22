@@ -6,7 +6,7 @@ import os
 
 app = Flask(__name__, template_folder="public")
 
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 50 MB
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
 
 # Configuración de la base de datos
 DB_CONFIG = {
@@ -390,6 +390,10 @@ def load_model(model_type):
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'success': False, 'error': 'Endpoint no encontrado'}), 404
+
+@app.errorhandler(413)
+def payload_too_large(error):
+    return jsonify({'success': False, 'error': 'Datos demasiado grandes. Intenta con chunks más pequeños.'}), 413
 
 @app.errorhandler(500)
 def internal_error(error):
