@@ -100,6 +100,48 @@ def all_numeri():
 def test_chunking():
     return render_template("test-chunking.html")
 
+@app.route('/api/training/count/<training_type>')
+def get_training_count(training_type):
+    """Obtener conteo de datos de entrenamiento para debugging"""
+    try:
+        if training_type not in ['alphabet', 'numbers']:
+            return jsonify({'success': False, 'error': 'Tipo de entrenamiento inválido'}), 400
+
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT label, COUNT(*) as count
+                FROM training_samples
+                WHERE type = %s
+                GROUP BY label
+                ORDER BY label
+            """, (training_type,))
+
+            results = cursor.fetchall()
+
+            cursor.execute("""
+                SELECT COUNT(*) as total
+                FROM training_samples
+                WHERE type = %s
+            """, (training_type,))
+
+            total_result = cursor.fetchone()
+
+        connection.close()
+
+        return jsonify({
+            'success': True,
+            'type': training_type,
+            'total_samples': total_result[0] if total_result else 0,
+            'by_label': [{'label': row[0], 'count': row[1]} for row in results]
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # APIs para el manejo de datos de entrenamiento
 
 @app.route('/api/training/save', methods=['POST'])
@@ -116,10 +158,7 @@ def save_training_data():
             return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
 
         with connection.cursor() as cursor:
-            # Limpiar datos existentes del tipo especificado
-            cursor.execute("DELETE FROM training_samples WHERE type = %s", (data['type'],))
-
-            # Insertar nuevos datos
+            # Insertar nuevos datos (sin eliminar existentes)
             features = data['features']
             labels = data['labels']
 
@@ -197,6 +236,28 @@ def clear_training_data(training_type):
         connection.close()
 
         return jsonify({'success': True, 'message': f'Datos de {training_type} limpiados correctamente'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/training/clear-before-save/<training_type>', methods=['POST'])
+def clear_before_save(training_type):
+    """Limpiar datos existentes antes de comenzar a guardar nuevos chunks"""
+    try:
+        if training_type not in ['alphabet', 'numbers']:
+            return jsonify({'success': False, 'error': 'Tipo de entrenamiento inválido'}), 400
+
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM training_samples WHERE type = %s", (training_type,))
+
+        connection.commit()
+        connection.close()
+
+        return jsonify({'success': True, 'message': f'Datos de {training_type} limpiados, listo para nuevos chunks'})
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

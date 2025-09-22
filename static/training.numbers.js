@@ -498,6 +498,16 @@ function updateSampleCount() {
 }
 
 async function sendTrainingDataInChunks(data, chunkSize = 50) {
+  // Limpiar datos existentes antes del primer chunk
+  const clearResponse = await fetch(`/api/training/clear-before-save/${data.type}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  });
+  
+  if (!clearResponse.ok) {
+    throw new Error(`Error limpiando datos: ${clearResponse.status} ${clearResponse.statusText}`);
+  }
+
   for (let i = 0; i < data.features.length; i += chunkSize) {
     const chunk = {
       type: data.type,
@@ -530,7 +540,15 @@ async function saveTrainingData() {
 		const chunkSize = Math.ceil(data.features.length / 10);
 		await sendTrainingDataInChunks(data, chunkSize);
 
-		console.log('Datos guardados correctamente');
+		// Verificar conteo de datos guardados
+		const countResponse = await fetch(`/api/training/count/${data.type}`);
+		if (countResponse.ok) {
+			const countData = await countResponse.json();
+			console.log(`Datos guardados correctamente. Total: ${countData.total_samples} muestras`);
+			console.log('Por etiqueta:', countData.by_label);
+		} else {
+			console.log('Datos guardados correctamente');
+		}
 	} catch (error) {
 		console.error('Error de conexión:', error);
 		alert('Error de conexión al servidor: ' + error.message);
