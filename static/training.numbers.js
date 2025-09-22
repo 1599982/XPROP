@@ -497,6 +497,22 @@ function updateSampleCount() {
 	});
 }
 
+async function sendTrainingDataInChunks(data, chunkSize = 100) {
+  for (let i = 0; i < data.features.length; i += chunkSize) {
+    const chunk = {
+      type: data.type,
+      features: data.features.slice(i, i + chunkSize),
+      labels: data.labels.slice(i, i + chunkSize)
+    };
+
+    await fetch("/api/training/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chunk)
+    });
+  }
+}
+
 // Guardar datos de entrenamiento
 async function saveTrainingData() {
 	try {
@@ -507,22 +523,8 @@ async function saveTrainingData() {
 			timestamp: Date.now()
 		};
 
-		const response = await fetch('/api/training/save', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data)
-		});
-
-		const result = await response.json();
-		
-		if (!result.success) {
-			console.error('Error guardando datos:', result.error);
-			alert('Error al guardar los datos: ' + result.error);
-		} else {
-			console.log('Datos guardados correctamente');
-		}
+		await sendTrainingDataInChunks(data);
+		console.log('Datos guardados correctamente');
 	} catch (error) {
 		console.error('Error de conexión:', error);
 		alert('Error de conexión al servidor');
