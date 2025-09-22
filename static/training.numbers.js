@@ -1,4 +1,4 @@
-import { currentHandLandmarks } from "./camera.js";
+import { currentHandLandmarks, isHandDetected } from "./camera.js";
 import * as Utils from "./utils.js";
 
 const letter_grid = document.getElementById("alphabet-grid");
@@ -12,7 +12,7 @@ const NUMBERS = [
 ];
 
 // Variables globales
-let selectedNumber = null;
+let selectedLetter = null;
 let trainingData = [];
 let trainingLabels = [];
 let model = null;
@@ -31,7 +31,7 @@ NUMBERS.forEach(number => {
 	clone.querySelector("img").src = clone.querySelector("img").src + number + ".png";
 	clone.querySelector("img").alt = number;
 	clone.querySelector("span").textContent = number;
-	clone.querySelector("div").addEventListener("click", actionNumber);
+	clone.querySelector("div").addEventListener("click", actionLetter);
 
 	letter_grid.appendChild(clone);
 });
@@ -237,11 +237,19 @@ class DecisionTree {
 }
 
 // Función principal al hacer click en un número
-function actionNumber() {
+function actionLetter() {
 	if (isCapturing || countdownActive) {
 		console.log('Ya hay una captura en progreso');
 		return;
 	}
+
+	// Verificar que hay una mano detectada antes de iniciar
+	if (!currentHandLandmarks || !isHandDetected) {
+		console.log('⚠️ No hay mano detectada. No se puede iniciar el entrenamiento para el número:', this.dataset.letter);
+		return;
+	}
+
+	console.log(`✅ Mano detectada. Iniciando cronómetro para el número: ${this.dataset.letter}`);
 
 	const previousSelected = document.querySelector('.letter-item.selected');
 	if (previousSelected) {
@@ -249,75 +257,77 @@ function actionNumber() {
 	}
 
 	this.classList.add('selected');
-	selectedNumber = this.dataset.letter; // usa dataset.letter porque el template usa data-letter
+	selectedLetter = this.dataset.letter; // usa dataset.letter porque el template usa data-letter
 
-	console.log(`Iniciando entrenamiento para el número: ${selectedNumber}`);
+	console.log(`Iniciando entrenamiento para el número: ${selectedLetter}`);
 	startCountdown();
 }
 
-// Cronómetro de 3 segundos superpuesto en el canvas
+// Cronómetro de 3 segundos superpuesto con DIV overlay
 function startCountdown() {
 	countdownActive = true;
 	window.countdownActive = true;
 	let countdown = 3;
 
-	// Dibujar el primer número inmediatamente
-	drawCountdown(countdown);
+	console.log('Iniciando cronómetro con DIV overlay');
+	// Mostrar overlay y dibujar el primer número inmediatamente
+	showCountdownOverlay(countdown);
 
 	const countdownInterval = setInterval(() => {
+		// Verificar si todavía hay mano detectada durante el cronómetro
+		if (!currentHandLandmarks || !isHandDetected) {
+			console.log('❌ Mano perdida durante cronómetro en:', countdown, 'segundos. Cancelando captura.');
+			clearInterval(countdownInterval);
+			countdownActive = false;
+			window.countdownActive = false;
+			hideCountdownOverlay();
+			resetToInitialState();
+			return;
+		}
+
 		countdown--;
 
 		if (countdown < 0) {
 			clearInterval(countdownInterval);
 			countdownActive = false;
 			window.countdownActive = false;
-			// Iniciar captura de datos por 5 segundos
+			// Ocultar overlay e iniciar captura
+			hideCountdownOverlay();
 			startDataCapture();
 		} else {
-			// Limpiar canvas y redibujar
-			drawCountdown(countdown);
+			// Actualizar número en overlay
+			showCountdownOverlay(countdown);
 		}
 	}, 1000);
 }
 
-// Dibujar cronómetro superpuesto en el canvas
-function drawCountdown(number) {
-	// Limpiar completamente el canvas primero
-	context.clearRect(0, 0, canvas.width, canvas.height);
-
-	// Guardar el estado del canvas
-	context.save();
-
-	// Fondo transparente (removido para hacer el cronómetro transparente)
-
-	const centerX = canvas.width / 2;
-	const centerY = canvas.height / 2;
-
-	// Configurar estilo del número
-	context.fillStyle = '#FFD700';
-	context.strokeStyle = '#FF4500';
-	context.lineWidth = 4;
-	context.font = 'bold 120px Arial';
-	context.textAlign = 'center';
-	context.textBaseline = 'middle';
-
-	// Dibujar número con sombra
-	context.shadowColor = '#000000';
-	context.shadowBlur = 10;
-	context.shadowOffsetX = 2;
-	context.shadowOffsetY = 2;
-
-	context.fillText(number.toString(), centerX, centerY);
-	context.strokeText(number.toString(), centerX, centerY);
-
-	// Resetear sombra para el texto adicional
-	context.shadowColor = 'transparent';
-	context.shadowBlur = 0;
-	context.shadowOffsetX = 0;
-	context.shadowOffsetY = 0;
-
-	context.restore();
+// Mostrar cronómetro usando DIV overlay
+function showCountdownOverlay(number) {
+	const overlay = document.getElementById('countdown-overlay');
+	const numberElement = document.getElementById('countdown-number');
+	
+	if (overlay && numberElement) {
+		console.log(`Mostrando cronómetro: ${number}`);
+		numberElement.textContent = number.toString();
+		overlay.style.display = 'flex';
+	} else {
+		console.error('Elementos de cronómetro no encontrados');
+	}
 }
+
+// Ocultar cronómetro overlay
+function hideCountdownOverlay() {
+	const overlay = document.getElementById('countdown-overlay');
+	
+	if (overlay) {
+		console.log('Ocultando cronómetro overlay');
+		overlay.style.display = 'none';
+	} else {
+		console.error('Overlay de cronómetro no encontrado para ocultar');
+	}
+}
+
+
 
 // Capturar datos durante 5 segundos
 function startDataCapture() {
@@ -328,16 +338,29 @@ function startDataCapture() {
 	let samplesCollected = 0;
 	let maxSamples = captureTime / captureInterval;
 
-	console.log(`Iniciando captura de datos para ${selectedNumber}...`);
+	console.log(`Iniciando captura de datos para ${selectedLetter}... (${maxSamples} muestras máximo, ${captureTime}ms)`);
 
 	const captureIntervalId = setInterval(() => {
-		if (currentHandLandmarks && selectedNumber) {
+		// Verificar si hay mano durante la captura
+		if (!currentHandLandmarks || !isHandDetected) {
+			console.log('❌ Mano perdida durante captura. Deteniendo captura después de', samplesCollected, 'muestras.');
+			clearInterval(captureIntervalId);
+			isCapturing = false;
+			window.isCapturing = false;
+			resetToInitialState();
+			return;
+		}
+
+		if (currentHandLandmarks && selectedLetter) {
 			const features = Utils.extractHandFeatures(currentHandLandmarks);
 
 			if (features) {
 				trainingData.push(features);
-				trainingLabels.push(selectedNumber);
+				trainingLabels.push(selectedLetter);
 				samplesCollected++;
+				if (samplesCollected % 5 === 0) {
+					console.log(`Capturado ${samplesCollected}/${maxSamples} muestras`);
+				}
 			}
 		}
 
@@ -369,7 +392,9 @@ function updateProgressBar(current, total) {
 
 // Finalizar captura y entrenar modelo
 function finishCapture(samplesCollected) {
-	console.log(`Captura finalizada. ${samplesCollected} muestras recolectadas para ${selectedNumber}`);
+	console.log(`Captura finalizada. ${samplesCollected} muestras recolectadas para ${selectedLetter}`);
+	
+	// El canvas se limpiará automáticamente con el siguiente frame del video
 
 	// Actualizar contador de muestras
 	updateSampleCount();
@@ -379,17 +404,34 @@ function finishCapture(samplesCollected) {
 		trainModel();
 	}
 
-	// Guardar datos (MISMO localStorage que letras)
+	// Guardar datos
 	saveTrainingData();
+
+	// Resetear estado inicial
+	resetToInitialState();
+
+	console.log(`Total de muestras en el dataset: ${trainingData.length}`);
+}
+
+// Resetear estado inicial
+function resetToInitialState() {
+	console.log('🔄 Reseteando estado inicial');
+	
+	// Resetear barra de progreso
+	const progressFill = document.getElementById('progress-fill');
+	const progressText = document.getElementById('progress-text');
+
+	if (progressFill && progressText) {
+		progressFill.style.width = '0%';
+		progressText.textContent = '0%';
+	}
 
 	// Limpiar selección
 	const selectedElement = document.querySelector('.letter-item.selected');
 	if (selectedElement) {
 		selectedElement.classList.remove('selected');
 	}
-	selectedNumber = null;
-
-	console.log(`Total de muestras en el dataset: ${trainingData.length}`);
+	selectedLetter = null;
 }
 
 // Entrenar modelo
