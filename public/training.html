@@ -23,71 +23,108 @@
       <!-- Sidebar -->
       <div class="sidebar">
         <button onclick="window.location.href='/'">
-        	<img src="{{ url_for('static', filename='images/icons/home.png') }}" alt="Inicio" />
+          <img
+            src="{{ url_for('static', filename='images/icons/home.png') }}"
+            alt="Inicio"
+          />
         </button>
         <button onclick="window.location.href='/previsione/alfabeto'">
-        	<img src="{{ url_for('static', filename='images/icons/letters.png') }}" alt="Letras" />
+          <img
+            src="{{ url_for('static', filename='images/icons/letters.png') }}"
+            alt="Letras"
+          />
         </button>
         <button onclick="window.location.href='/previsione/numeri'">
-        	<img src="{{ url_for('static', filename='images/icons/numbers.png') }}" alt="Número" />
+          <img
+            src="{{ url_for('static', filename='images/icons/numbers.png') }}"
+            alt="Número"
+          />
         </button>
         <button onclick="window.location.href='/allenamiento'">
-          	<img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenando" />
+          <img
+            src="{{ url_for('static', filename='images/icons/training.png') }}"
+            alt="Entrenando"
+          />
         </button>
         <button onclick="window.location.href='/'">
-        	<img src="{{ url_for('static', filename='images/icons/user.png') }}" alt="Usuario" />
+          <img
+            src="{{ url_for('static', filename='images/icons/user.png') }}"
+            alt="Usuario"
+          />
         </button>
       </div>
 
       <!-- Contenido principal -->
       <div class="main-content">
-        <!-- Botones principales de entrenamiento -->
-        <div class="training-options">
-          <div
-            class="training-card"
-            onclick="window.location.href='allenamiento/numeri'"
-          >
-            <h3>Entrenar los 123</h3>
-            <div class="training-icon">
-              <img
-                src="{{ url_for('static', filename='images/icons/training.png') }}"
-                alt="Entrenar números"
-              />
+        <!-- Contenedor principal con diseño de grid -->
+        <div class="layout-container">
+          <!-- Sección de botones de entrenamiento - parte superior izquierda -->
+          <div class="training-section">
+            <div class="training-options">
+              <div
+                class="training-card"
+                onclick="window.location.href='/allenamiento/numeri'"
+              >
+                <h3>Entrenar los 123</h3>
+                <div class="training-icon">
+                  <img
+                    src="{{ url_for('static', filename='images/icons/training.png') }}"
+                    alt="Entrenar números"
+                  />
+                </div>
+              </div>
+
+              <div
+                class="training-card"
+                onclick="window.location.href='allenamiento/alfabeto'"
+              >
+                <h3>Entrenar el ABC</h3>
+                <div class="training-icon">
+                  <img
+                    src="{{ url_for('static', filename='images/icons/training.png') }}"
+                    alt="Entrenar letras"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div
-            class="training-card"
-            onclick="window.location.href='allenamiento/alfabeto'"
-          >
-            <h3>Entrenar el ABC</h3>
-            <div class="training-icon">
-              <img src="{{ url_for('static', filename='images/icons/training.png') }}" alt="Entrenar letras" />
-            </div>
+          <!-- Sección de video - posición según cuadro rojo (superior derecha, alto) -->
+          <div class="video-section">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/u-OzHcpiQ7U"
+              title="¿quieres aprender Lengua de Señas Mexicana? Síguenos #lenguadeseñasmexicana #lsm #lenguajedeseñas"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
           </div>
-        </div>
 
-        <!-- Sección de modelos entrenados -->
-        <div class="models-section">
-          <h3 class="models-title">Modelos Entrenados</h3>
-          <div class="models-container">
-            <div class="model-item">
-              <div class="model-info">
-                <span class="model-name">Abecedario</span>
-                <span class="model-percentage">75%</span>
+          <!-- Sección de modelos entrenados - posición según cuadro negro (inferior izquierda) -->
+          <div class="models-section">
+            <h3 class="models-title">Modelos Entrenados</h3>
+            <div class="models-container">
+              <div class="model-item">
+                <div class="model-info">
+                  <span class="model-name">Abecedario</span>
+                  <span class="model-percentage">75%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 75%"></div>
+                </div>
               </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 75%"></div>
-              </div>
-            </div>
 
-            <div class="model-item">
-              <div class="model-info">
-                <span class="model-name">Numero</span>
-                <span class="model-percentage">73%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 73%"></div>
+              <div class="model-item">
+                <div class="model-info">
+                  <span class="model-name">Numero</span>
+                  <span class="model-percentage">73%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 73%"></div>
+                </div>
               </div>
             </div>
           </div>

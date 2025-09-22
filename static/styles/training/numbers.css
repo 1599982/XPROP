@@ -440,6 +440,3 @@
 .letter-item.selected {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
-```
-
-Ahora voy a actualizar el archivo HTML para que use este nuevo CSS específico:
