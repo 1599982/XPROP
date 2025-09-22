@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Entrenamiento - Números</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrenamiento - Letras</title>
 
-  <!-- Fuente -->
-  <link href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap" rel="stylesheet" />
+    <!-- Fuente Konkhmer Sleokchher -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Konkhmer+Sleokchher&display=swap"
+      rel="stylesheet"
+    />
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/numbers.css') }}" />
-</head>
-<body>
-  <!-- Título -->
-  <h2 class="title">Entrenamiento - Números</h2>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/predict/alphabet.css') }}">
 
-  <!-- Marco azul -->
-  <div class="content-box">
-    <!-- Sidebar -->
+  </head>
+  <body>
+    <!-- Título -->
+    <h2 class="title">Abecedario en Señas</h2>
+
+<!-- Único cuadro azul -->
+<div class="content-box">
+  <!-- Sidebar -->
 	<div class="sidebar">
 		<button onclick="window.location.href='/'">
 			<img src="{{ url_for('static', filename='images/icons/home.png') }}" alt="Inicio">
@@ -36,79 +40,79 @@
 		</button>
 	</div>
 
-    <!-- Contenido principal -->
-    <div class="main-content">
-      <!-- Sección izquierda -->
-      <div class="left-section">
-        <!-- Detectores -->
-        <div class="detectores">
-          <div class="detector">
-            <div class="detector-header">
-              <span>Detector 123</span>
-              <span class="icon">⋮</span>
-            </div>
-            <div class="detector-body">
-              <div class="icon-box">+</div>
-              <div class="progress-bar"><div class="progress" style="width: 75%;">75%</div></div>
-            </div>
-            <div class="detector-footer">Mano Izquierda</div>
-          </div>
 
-          <div class="detector">
-            <div class="detector-header">
-              <span>Detector 123</span>
-              <span class="icon">⋮</span>
+            <!-- Contenido principal -->
+  <div class="main-content">
+    <!-- Sección izquierda -->
+    <div class="left-section">
+      <!-- Detectores -->
+      <div class="detectores">
+        <!-- Detector 1: Mano Izquierda - Letras -->
+        <div class="detector">
+          <div class="detector-body">
+            <div class="detected-letter" id="detected-letter-left">-</div>
+            <div class="progress-bar">
+              <div class="progress" id="letter-progress-left" style="width: 0%;">0%</div>
             </div>
-            <div class="detector-body">
-              <div class="icon-box">+</div>
-              <div class="progress-bar"><div class="progress" style="width: 63%;">63%</div></div>
-            </div>
-            <div class="detector-footer">Mano Izquierda</div>
           </div>
+          <div class="detector-footer">Reconocimiento ABC</div>
         </div>
 
-        <!-- Operación matemática -->
-        <div class="operation-box">X + X = X</div>
+        <!-- Detector 2: Mano Derecha - Control -->
+        <div class="detector">
+          <div class="detector-body">
+            <div class="hand-state" id="hand-state-right">ABIERTA</div>
+            <div class="progress-bar">
+              <div class="progress" id="hand-progress-right" style="width: 0%;">0%</div>
+            </div>
+          </div>
+          <div class="detector-footer">Control de Escritura</div>
+        </div>
+      </div>
+      <!-- Abecedario -->
+		<div class="abecedario-container">
+		    <div class="alphabet-grid" id="alphabet-grid">
+				<template id="letter-content">
+           			<div class="letter-item" data-letter="">
+           				<img src="{{ url_for('static', filename='images/icons/letters/') }}" alt="">
+            			<span></span>
+              		</div>
+             	</template>
+		    </div>
+		</div>
+    </div>
 
-        <!-- Números -->
-        <div class="numbers-container">
-          <div class="numbers-grid">
-            <div class="number-item"><img src="imagenes/iconos/numeros/0.png" alt="0"><span>0</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/1.png" alt="1"><span>1</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/2.png" alt="2"><span>2</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/3.png" alt="3"><span>3</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/4.png" alt="4"><span>4</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/5.png" alt="5"><span>5</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/6.png" alt="6"><span>6</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/7.png" alt="7"><span>7</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/8.png" alt="8"><span>8</span></div>
-            <div class="number-item"><img src="imagenes/iconos/numeros/9.png" alt="9"><span>9</span></div>
+         <!-- Sección derecha: Cámara -->
+    <div class="right-section">
+      <!-- Cuadro de letras detectadas -->
+      <div class="detected-text-container">
+        <div class="detected-text-header">
+          <span>Texto Detectado</span>
+          <div class="header-controls">
+            <span id="write-status" class="write-status">✅ Listo</span>
+            <button id="clear-text" class="clear-btn">Limpiar</button>
           </div>
         </div>
-
-        <!-- Botones de operaciones -->
-        <div class="operations-buttons">
-          <button>SUMA</button>
-          <button>RESTA</button>
-          <button>MULTIPLICACION</button>
-          <button>DIVISION</button>
+        <div class="detected-text-box" id="detected-text-box">
+          <span id="detected-text"></span>
         </div>
       </div>
 
-      <!-- Sección derecha -->
-      <div class="right-section">
-        <div class="camera-area">
-          <div class="camera-placeholder">
-            <p>Área de captura de cámara</p>
-            <button id="start-camera" class="camera-btn">Iniciar Cámara</button>
-            <video id="video" autoplay muted style="display:none;"></video>
-            <canvas id="canvas" style="display:none;"></canvas>
-          </div>
+      <div class="camera-area">
+        <div class="camera-placeholder">
+          <video id="video" autoplay muted></video>
+          <canvas id="canvas" width="450" height="400"></canvas>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="numero-script.js"></script>
-</body>
+    <!-- Librerías necesarias para MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='predict.alphabet.js') }}" type="module"></script>
+  </body>
 </html>
